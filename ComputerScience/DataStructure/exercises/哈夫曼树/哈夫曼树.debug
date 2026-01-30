@@ -1,0 +1,75 @@
+{
+    "breakpoints": [
+        {
+            "breakpoint_type": 0,
+            "condition": "",
+            "enabled": true,
+            "filename": "HaffmanTree.cpp",
+            "line": 22,
+            "timestamp": "1763810943898"
+        }
+    ],
+    "timestamp": "1763886235542",
+    "watchvars": [
+        {
+            "expression": "(*HT)[i].weight",
+            "timestamp": "1763810980293"
+        },
+        {
+            "expression": "i",
+            "timestamp": "1763810994584"
+        },
+        {
+            "expression": "m",
+            "timestamp": "1763810998258"
+        },
+        {
+            "expression": "n",
+            "timestamp": "1763811001416"
+        },
+        {
+            "expression": "s1",
+            "timestamp": "1763811004907"
+        },
+        {
+            "expression": "s2",
+            "timestamp": "1763811007333"
+        },
+        {
+            "expression": "(*HT)[s1].parent",
+            "timestamp": "1763811019220"
+        },
+        {
+            "expression": "(*HT)[i].lchild",
+            "timestamp": "1763811026461"
+        },
+        {
+            "expression": "(*HT)[i].rchild",
+            "timestamp": "1763811041946"
+        },
+        {
+            "expression": "min1W",
+            "timestamp": "1763811060138"
+        },
+        {
+            "expression": "min2W",
+            "timestamp": "1763811064469"
+        },
+        {
+            "expression": "min1",
+            "timestamp": "1763811068401"
+        },
+        {
+            "expression": "min2",
+            "timestamp": "1763811072266"
+        },
+        {
+            "expression": "HT[k].weight",
+            "timestamp": "1763811184914"
+        },
+        {
+            "expression": "(*HT)[s2].parent",
+            "timestamp": "1763811384358"
+        }
+    ]
+}

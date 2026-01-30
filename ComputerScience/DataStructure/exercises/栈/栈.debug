@@ -1,0 +1,15 @@
+{
+    "breakpoints": [
+        {
+            "breakpoint_type": 0,
+            "condition": "",
+            "enabled": true,
+            "filename": "SeqStack.cpp",
+            "line": 5,
+            "timestamp": "1763699841014"
+        }
+    ],
+    "timestamp": "1763714652469",
+    "watchvars": [
+    ]
+}

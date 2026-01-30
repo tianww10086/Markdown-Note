@@ -1,0 +1,43 @@
+# Project: 队列
+# Makefile created by Red Panda C++ 3.3.3147
+
+CXX      = "g++.exe"
+CC       = "gcc.exe"
+WINDRES  = "windres.exe"
+RM       = del /q /f
+CD       = cd /d
+LIBS     = "-Wl,--stack,12582912"
+INCS     = 
+CXXINCS  = 
+CXXFLAGS = $(CXXINCS) "-g3" "-pipe" "-Wall" "-D_DEBUG"
+CFLAGS   = $(INCS) "-g3" "-pipe" "-Wall" "-D_DEBUG"
+WINDRESFLAGS = 
+RES      = 队列_private.res
+OBJ      = LinkQueue.o main.o SeqQueue.o $(RES)
+BIN      = 队列.exe
+LINKOBJ  = "LinkQueue.o" "main.o" "SeqQueue.o" "队列_private.res"
+CLEANOBJ = "LinkQueue.o" "main.o" "SeqQueue.o" "队列_private.res" "队列.exe"
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	-$(RM) $(CLEANOBJ) >NUL 2>&1
+
+队列.exe: $(OBJ)
+
+	$(CXX) $(LINKOBJ) -o "队列.exe" $(LIBS)
+
+LinkQueue.o: LinkQueue.cpp LinkQueue.h
+	$(CXX) -c "LinkQueue.cpp" -o "LinkQueue.o" $(CXXFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+main.o: main.cpp LinkQueue.h
+	$(CXX) -c "main.cpp" -o "main.o" $(CXXFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+SeqQueue.o: SeqQueue.cpp SeqQueue.h
+	$(CXX) -c "SeqQueue.cpp" -o "SeqQueue.o" $(CXXFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+队列_private.res: 队列_private.rc 
+	$(WINDRES) -i "队列_private.rc" --input-format=rc -o "队列_private.res" -O coff $(WINDRESFLAGS) 
+

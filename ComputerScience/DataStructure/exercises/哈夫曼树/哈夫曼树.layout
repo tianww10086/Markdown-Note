@@ -1,0 +1,32 @@
+[
+    {
+        "caretX": 36,
+        "caretY": 25,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/哈夫曼树/HaffmanTree.h",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 0,
+        "top": 360
+    },
+    {
+        "caretX": 2,
+        "caretY": 10,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/哈夫曼树/main.cpp",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 2,
+        "top": 0
+    },
+    {
+        "caretX": 1,
+        "caretY": 78,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/哈夫曼树/HaffmanTree.cpp",
+        "focused": true,
+        "isOpen": true,
+        "left": 0,
+        "order": 1,
+        "top": 1800
+    }
+]

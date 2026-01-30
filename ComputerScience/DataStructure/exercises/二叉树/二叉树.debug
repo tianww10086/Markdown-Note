@@ -1,0 +1,31 @@
+{
+    "breakpoints": [
+        {
+            "breakpoint_type": 0,
+            "condition": "",
+            "enabled": true,
+            "filename": "BiTree.c",
+            "line": 1,
+            "timestamp": "1763796925797"
+        },
+        {
+            "breakpoint_type": 0,
+            "condition": "",
+            "enabled": true,
+            "filename": "BiTree.c",
+            "line": 57,
+            "timestamp": "1763797844767"
+        },
+        {
+            "breakpoint_type": 0,
+            "condition": "",
+            "enabled": true,
+            "filename": "main.c",
+            "line": 35,
+            "timestamp": "1763803496568"
+        }
+    ],
+    "timestamp": "1763804605277",
+    "watchvars": [
+    ]
+}

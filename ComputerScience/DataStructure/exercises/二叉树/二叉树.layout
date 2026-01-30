@@ -1,0 +1,32 @@
+[
+    {
+        "caretX": 13,
+        "caretY": 37,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/二叉树/BiTree.h",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 0,
+        "top": 1188
+    },
+    {
+        "caretX": 16,
+        "caretY": 6,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/二叉树/main.c",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 2,
+        "top": 660
+    },
+    {
+        "caretX": 20,
+        "caretY": 146,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/二叉树/BiTree.c",
+        "focused": true,
+        "isOpen": true,
+        "left": 0,
+        "order": 1,
+        "top": 6116
+    }
+]

@@ -1,0 +1,40 @@
+# Project: 二叉树
+# Makefile created by Red Panda C++ 3.3.3147
+
+CXX      = "g++.exe"
+CC       = "gcc.exe"
+WINDRES  = "windres.exe"
+RM       = del /q /f
+CD       = cd /d
+LIBS     = "-Wl,--stack,12582912"
+INCS     = 
+CXXINCS  = 
+CXXFLAGS = $(CXXINCS) "-g3" "-pipe" "-Wall" "-D_DEBUG"
+CFLAGS   = $(INCS) "-g3" "-pipe" "-Wall" "-D_DEBUG"
+WINDRESFLAGS = 
+RES      = 二叉树_private.res
+OBJ      = main.o BiTree.o $(RES)
+BIN      = 二叉树.exe
+LINKOBJ  = "main.o" "BiTree.o" "二叉树_private.res"
+CLEANOBJ = "main.o" "BiTree.o" "二叉树_private.res" "二叉树.exe"
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	-$(RM) $(CLEANOBJ) >NUL 2>&1
+
+二叉树.exe: $(OBJ)
+
+	$(CC) $(LINKOBJ) -o "二叉树.exe" $(LIBS)
+
+main.o: main.c BiTree.h
+	$(CC) -c "main.c" -o "main.o" $(CFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+BiTree.o: BiTree.c BiTree.h
+	$(CC) -c "BiTree.c" -o "BiTree.o" $(CFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+二叉树_private.res: 二叉树_private.rc 
+	$(WINDRES) -i "二叉树_private.rc" --input-format=rc -o "二叉树_private.res" -O coff $(WINDRESFLAGS) 
+
