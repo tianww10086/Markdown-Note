@@ -1,0 +1,15 @@
+{
+    "breakpoints": [
+        {
+            "breakpoint_type": 0,
+            "condition": "",
+            "enabled": true,
+            "filename": "LinkList.c",
+            "line": 99,
+            "timestamp": "1762596596468"
+        }
+    ],
+    "timestamp": "1762601915940",
+    "watchvars": [
+    ]
+}

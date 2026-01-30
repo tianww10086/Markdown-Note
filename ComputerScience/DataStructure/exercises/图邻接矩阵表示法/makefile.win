@@ -1,0 +1,40 @@
+# Project: ͼ
+# Makefile created by Red Panda C++ 3.3.3147
+
+CXX      = "g++.exe"
+CC       = "gcc.exe"
+WINDRES  = "windres.exe"
+RM       = del /q /f
+CD       = cd /d
+LIBS     = "-Wl,--stack,12582912"
+INCS     = 
+CXXINCS  = 
+CXXFLAGS = $(CXXINCS) "-g3" "-pipe" "-Wall" "-D_DEBUG"
+CFLAGS   = $(INCS) "-g3" "-pipe" "-Wall" "-D_DEBUG"
+WINDRESFLAGS = 
+RES      = ͼ_private.res
+OBJ      = graph.o main.o $(RES)
+BIN      = ͼ.exe
+LINKOBJ  = "graph.o" "main.o" "ͼ_private.res"
+CLEANOBJ = "graph.o" "main.o" "ͼ_private.res" "ͼ.exe"
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	-$(RM) $(CLEANOBJ) >NUL 2>&1
+
+ͼ.exe: $(OBJ)
+
+	$(CXX) $(LINKOBJ) -o "ͼ.exe" $(LIBS)
+
+graph.o: graph.cpp graph.h
+	$(CXX) -c "graph.cpp" -o "graph.o" $(CXXFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+main.o: main.cpp graph.h
+	$(CXX) -c "main.cpp" -o "main.o" $(CXXFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+ͼ_private.res: ͼ_private.rc 
+	$(WINDRES) -i "ͼ_private.rc" --input-format=rc -o "ͼ_private.res" -O coff $(WINDRESFLAGS) 
+

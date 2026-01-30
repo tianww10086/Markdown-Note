@@ -1,0 +1,40 @@
+# Project: ¹ş·òÂüÊ÷
+# Makefile created by Red Panda C++ 3.3.3147
+
+CXX      = "g++.exe"
+CC       = "gcc.exe"
+WINDRES  = "windres.exe"
+RM       = del /q /f
+CD       = cd /d
+LIBS     = "-Wl,--stack,12582912"
+INCS     = 
+CXXINCS  = 
+CXXFLAGS = $(CXXINCS) "-g3" "-pipe" "-Wall" "-D_DEBUG"
+CFLAGS   = $(INCS) "-g3" "-pipe" "-Wall" "-D_DEBUG"
+WINDRESFLAGS = 
+RES      = ¹ş·òÂüÊ÷_private.res
+OBJ      = main.o HaffmanTree.o $(RES)
+BIN      = ¹ş·òÂüÊ÷.exe
+LINKOBJ  = "main.o" "HaffmanTree.o" "¹ş·òÂüÊ÷_private.res"
+CLEANOBJ = "main.o" "HaffmanTree.o" "¹ş·òÂüÊ÷_private.res" "¹ş·òÂüÊ÷.exe"
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	-$(RM) $(CLEANOBJ) >NUL 2>&1
+
+¹ş·òÂüÊ÷.exe: $(OBJ)
+
+	$(CXX) $(LINKOBJ) -o "¹ş·òÂüÊ÷.exe" $(LIBS)
+
+main.o: main.cpp HaffmanTree.h
+	$(CXX) -c "main.cpp" -o "main.o" $(CXXFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+HaffmanTree.o: HaffmanTree.cpp HaffmanTree.h
+	$(CXX) -c "HaffmanTree.cpp" -o "HaffmanTree.o" $(CXXFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+¹ş·òÂüÊ÷_private.res: ¹ş·òÂüÊ÷_private.rc 
+	$(WINDRES) -i "¹ş·òÂüÊ÷_private.rc" --input-format=rc -o "¹ş·òÂüÊ÷_private.res" -O coff $(WINDRESFLAGS) 
+

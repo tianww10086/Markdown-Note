@@ -1,0 +1,52 @@
+[
+    {
+        "caretX": 23,
+        "caretY": 69,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/队列/SeqQueue.cpp",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 3,
+        "top": 1892
+    },
+    {
+        "caretX": 23,
+        "caretY": 13,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/队列/SeqQueue.h",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 0,
+        "top": 792
+    },
+    {
+        "caretX": 22,
+        "caretY": 31,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/队列/LinkQueue.cpp",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 4,
+        "top": 792
+    },
+    {
+        "caretX": 14,
+        "caretY": 30,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/队列/LinkQueue.h",
+        "focused": true,
+        "isOpen": true,
+        "left": 0,
+        "order": 1,
+        "top": 660
+    },
+    {
+        "caretX": 19,
+        "caretY": 31,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/队列/main.cpp",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 2,
+        "top": 660
+    }
+]

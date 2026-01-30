@@ -1,0 +1,32 @@
+[
+    {
+        "caretX": 1,
+        "caretY": 65,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/顺序表/main.c",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 0,
+        "top": 600
+    },
+    {
+        "caretX": 8,
+        "caretY": 50,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/顺序表/List.c",
+        "focused": true,
+        "isOpen": true,
+        "left": 0,
+        "order": 2,
+        "top": 1600
+    },
+    {
+        "caretX": 9,
+        "caretY": 16,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/顺序表/List.h",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 1,
+        "top": 153
+    }
+]

@@ -1,0 +1,40 @@
+# Project: Ë³Ðò±í
+# Makefile created by Red Panda C++ 3.3.3147
+
+CXX      = "g++.exe"
+CC       = "gcc.exe"
+WINDRES  = "windres.exe"
+RM       = del /q /f
+CD       = cd /d
+LIBS     = "-Wl,--stack,12582912"
+INCS     = 
+CXXINCS  = 
+CXXFLAGS = $(CXXINCS) "-g3" "-pipe" "-Wall" "-D_DEBUG"
+CFLAGS   = $(INCS) "-g3" "-pipe" "-Wall" "-D_DEBUG"
+WINDRESFLAGS = 
+RES      = Ë³Ðò±í_private.res
+OBJ      = main.o List.o $(RES)
+BIN      = Ë³Ðò±í.exe
+LINKOBJ  = "main.o" "List.o" "Ë³Ðò±í_private.res"
+CLEANOBJ = "main.o" "List.o" "Ë³Ðò±í_private.res" "Ë³Ðò±í.exe"
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	-$(RM) $(CLEANOBJ) >NUL 2>&1
+
+Ë³Ðò±í.exe: $(OBJ)
+
+	$(CC) $(LINKOBJ) -o "Ë³Ðò±í.exe" $(LIBS)
+
+main.o: main.c List.h
+	$(CC) -c "main.c" -o "main.o" $(CFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+List.o: List.c List.h
+	$(CC) -c "List.c" -o "List.o" $(CFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+Ë³Ðò±í_private.res: Ë³Ðò±í_private.rc 
+	$(WINDRES) -i "Ë³Ðò±í_private.rc" --input-format=rc -o "Ë³Ðò±í_private.res" -O coff $(WINDRESFLAGS) 
+

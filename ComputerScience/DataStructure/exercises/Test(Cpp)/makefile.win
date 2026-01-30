@@ -1,0 +1,37 @@
+# Project: Test(Cpp)
+# Makefile created by Red Panda C++ 3.3.3147
+
+CXX      = "g++.exe"
+CC       = "gcc.exe"
+WINDRES  = "windres.exe"
+RM       = del /q /f
+CD       = cd /d
+LIBS     = "-Wl,--stack,12582912"
+INCS     = 
+CXXINCS  = 
+CXXFLAGS = $(CXXINCS) "-g3" "-pipe" "-Wall" "-D_DEBUG"
+CFLAGS   = $(INCS) "-g3" "-pipe" "-Wall" "-D_DEBUG"
+WINDRESFLAGS = 
+RES      = Test(Cpp)_private.res
+OBJ      = main.o $(RES)
+BIN      = Test(Cpp).exe
+LINKOBJ  = "main.o" "Test(Cpp)_private.res"
+CLEANOBJ = "main.o" "Test(Cpp)_private.res" "Test(Cpp).exe"
+
+.PHONY: all all-before all-after clean clean-custom
+
+all: all-before $(BIN) all-after
+
+clean: clean-custom
+	-$(RM) $(CLEANOBJ) >NUL 2>&1
+
+Test(Cpp).exe: $(OBJ)
+
+	$(CXX) $(LINKOBJ) -o "Test(Cpp).exe" $(LIBS)
+
+main.o: main.cpp
+	$(CXX) -c "main.cpp" -o "main.o" $(CXXFLAGS)  -finput-charset=UTF-8 -fexec-charset=gbk
+
+Test(Cpp)_private.res: Test(Cpp)_private.rc 
+	$(WINDRES) -i "Test(Cpp)_private.rc" --input-format=rc -o "Test(Cpp)_private.res" -O coff $(WINDRESFLAGS) 
+

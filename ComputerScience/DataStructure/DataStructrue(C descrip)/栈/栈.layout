@@ -1,0 +1,51 @@
+[
+    {
+        "caretX": 1,
+        "caretY": 25,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/栈/Stack.h",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 1,
+        "top": 308
+    },
+    {
+        "caretX": 12,
+        "caretY": 31,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/栈/SeqStack.cpp",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 3,
+        "top": 880
+    },
+    {
+        "caretX": 13,
+        "caretY": 13,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/栈/main.cpp",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 0,
+        "top": 44
+    },
+    {
+        "caretX": 20,
+        "caretY": 7,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/栈/SeqStack.h",
+        "focused": false,
+        "isOpen": false,
+        "left": 0,
+        "top": 132
+    },
+    {
+        "caretX": 3,
+        "caretY": 78,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/栈/Stack.cpp",
+        "focused": true,
+        "isOpen": true,
+        "left": 0,
+        "order": 2,
+        "top": 2860
+    }
+]

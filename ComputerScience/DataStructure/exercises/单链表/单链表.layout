@@ -1,0 +1,32 @@
+[
+    {
+        "caretX": 2,
+        "caretY": 22,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/单链表/main.c",
+        "focused": true,
+        "isOpen": true,
+        "left": 0,
+        "order": 0,
+        "top": 47
+    },
+    {
+        "caretX": 1,
+        "caretY": 7,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/单链表/LinkList.h",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 1,
+        "top": 141
+    },
+    {
+        "caretX": 10,
+        "caretY": 160,
+        "filename": "E:/Markdown Note/ComputerScience/DataStructure/exercises/单链表/LinkList.c",
+        "focused": false,
+        "isOpen": true,
+        "left": 0,
+        "order": 2,
+        "top": 7191
+    }
+]
