@@ -285,6 +285,38 @@ var class = document.getElementsByClassName('cks');
 
 
 
+### 2.6.1 innerHTML
+
+​	`innerHTML`是DOM元素的一个属性，**可以设置和读取HTML元素的内部HTML内容**
+
+​	例如：
+
+```HTML
+<div id="container">
+    <h1>标题</h1>
+    <p>段落 <span style="color:red">红色文字</span></p>
+</div>
+
+<script>
+    const container = document.getElementById('container');
+    console.log(container.innerHTML);
+    // 输出: <h1>标题</h1><p>段落 <span style="color:red">红色文字</span></p>
+</script>
+```
+
+innerHTML即`id为container`的div标签里的元素与文本。我们可以设置这些元素和文本。例如，将它的标题文本设置为Test：
+
+```HTML
+```
+
+
+
+
+
+
+
+
+
 
 
 ## 2.7 事件绑定
