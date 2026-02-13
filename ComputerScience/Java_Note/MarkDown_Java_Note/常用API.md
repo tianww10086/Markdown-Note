@@ -742,6 +742,16 @@ int randNumber = rand.nextInt(MAX-MIN+1)+MIN;
 
 ## 9 Map接口
 
+​	Map是双列集合的顶层接口，它的功能是全部双列集合都可以继承使用的
+
+| 方法名称              | 说明                 |
+| --------------------- | -------------------- |
+| V put(K key, V value) | 添加元素             |
+| V remove(Object key)  | 根据键删除键值对元素 |
+| void clear()          | 移除所有元素         |
+|                       |                      |
+|                       |                      |
+
 ​	使用键值映射计算字符个数：
 
 ```java
@@ -770,6 +780,8 @@ int randNumber = rand.nextInt(MAX-MIN+1)+MIN;
 
 
 
+
+## 10. SimpleDateFomat
 
 
 
