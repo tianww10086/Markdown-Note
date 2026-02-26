@@ -490,7 +490,7 @@ class TimePrinter implements ActionListener
 
 ​	无需关心实现方法中的参数ActionEvent event。目前并没有使用它。注意定时器Timer类要求所传递对象所属的类必须实现了java.awtevent包的ActionListener接口。	
 
-##### API
+**API**
 
 **static void showMessageDialog(Component parent,Object message)  //javax.swing.JOptionPane **
 
