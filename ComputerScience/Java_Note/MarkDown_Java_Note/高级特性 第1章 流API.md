@@ -2,6 +2,8 @@
 
 
 
+
+
 ## 1.1 从迭代到流的操作
 
 ​	在处理集合时，我们通常会迭代遍历它的元素，并在每个元素上执行某项操作。例如，假设我们想要对某本书中所有长单词进行计数。首先会将单词放到一个列表中：
@@ -110,7 +112,7 @@ default String<E> paralleStream();
 
 ## 1.2 流的创建
 
-​	**`Collection`接口的stream方法可以将任何集合转换为一个流**。如果你有一个数组，那么可以转而使用静态的Stream.of方法
+​	==**`Collection`接口的stream方法可以将任何集合转换为一个流**==。如果你有一个数组，那么可以转而使用静态的Stream.of方法
 
 ```java
 Stream<String> words = Stream.of(contents.split("\\PL+"));//contents是一个字符串
@@ -325,8 +327,9 @@ static <T> Stream<T> empty()
 static <T> Stream<T> generate(Supplier<T> s)
     产生一个无限流，它的值是通过反复调用函数s而构成的
 static <T> Stream<T> iterate(T seed, UnaryOperator<T> f)
+    返回一个无线流，seed为初始值，f是变化函数 seed = f(seed);
 static <T> Stream<T> iterate(T seed, Predicate<? super T> hashNext,UnaryOperator<T> f)
-    产生一个无限流，它的元素包含seed、在seed上调用f产生的值、在前一个元素上调用f产生的值，等等。第一个方法会产生一个无限流，而第二个方法的流会碰到一个不满足hashNext谓词的元素时终止
+    返回一个无线流，seed为初始值，通过判断t是否是否某个条件，如果符合就使T产生变化，变化的结果由f决定。反正T不合法条件停止生成
 static <T> Stream<T> ofNullable(T t)
     如果t为null，返回一个空流，否则返回包含t的流。
 ```
@@ -383,7 +386,16 @@ List<String> words  = ....;
 Stream<String> longwords = words.stream().filter( w -> w.length() >12); 
 ```
 
-​	`filter`的引元是一个`Predicate<T>`类型的对象，即一个从T映射到boolean值的函数
+​	`filter`的引元是一个`Predicate<T>`类型的对象，即一个从T映射到boolean值的函数。下面是匿名内部类的写法
+
+```java    
+List<String> words = "";
+Stream<String> longwords = words.stream().filter(
+	new Predicate<String>(){
+        
+    }
+)
+```
 
 
 
@@ -996,7 +1008,7 @@ public class getOptional {
         Stream<String> stringStream  = Stream.empty();
         Optional<String> optionalS = stringStream.max(String::compareTo);
 
-        //getProperty方法用于获取系统属性,当流中没有任何元素时，orElesGet就会返回这个接口的实现方法的返回值
+    	//因为optionalS为空，它会抛出里面lambda表达式的结果
         String result = optionalS.orElseThrow(()->new IllegalStateException("该流为空"));
         System.out.println(result); //输出null
 

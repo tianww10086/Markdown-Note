@@ -866,6 +866,8 @@ Arrays.sort(words, (first,second)->first.length()-second.length());
 
 #### 6.3.4 方法引用
 
+只要 Lambda 的主体部分**仅仅**是调用了一个现成的方法，且没有额外的逻辑（比如加减乘除、判断等），就可以简化为方法引用。
+
 如果你希望只要出现一个定时器事件去打印这个时间对象：
 
 ```java
@@ -1060,7 +1062,73 @@ public static void repeat(int n,Runnable action)
 
 调用action.run时会执行这个lambda表达式的主体。
 
-##### 										                   表6-1 常用函数式接口
+
+
+#### 6.3.8 常用函数式接口
+
+​	在编写lambda表达式的时候，需要知道实现抽象方法的参数和返回值。所以，下面列举了常用的函数式接口：
+
+**1. 消费型 (Consumer) —— “只进不出”**
+
+**特征**：接收参数，执行操作，**没有返回值** (`void`)。
+**典型场景**：`forEach`, 打印日志，修改对象状态。
+
+| 接口名                | 抽象方法签名            | Lambda 写法示例              | 记忆口诀         |
+| :-------------------- | :---------------------- | :--------------------------- | :--------------- |
+| **`Consumer<T>`**     | `void accept(T t)`      | `s -> System.out.println(s)` | **吃一个，不吐** |
+| **`BiConsumer<T,U>`** | `void accept(T t, U u)` | `(k, v) -> map.put(k, v)`    | **吃两个，不吐** |
+
+**2. 供给型 (Supplier) —— “无中生有”**
+
+**特征**：**不需要参数**，**返回一个结果**。
+**典型场景**：工厂模式，`Optional.orElseGet`, 延迟加载。
+
+| 接口名                | 抽象方法签名             | Lambda 写法示例    | 记忆口诀         |
+| :-------------------- | :----------------------- | :----------------- | :--------------- |
+| **`Supplier<T>`**     | `T get()`                | `() -> new Date()` | **不吃，吐一个** |
+| **`BooleanSupplier`** | `boolean getAsBoolean()` | `() -> true`       | **专门吐布尔值** |
+
+
+
+**3. 函数型 (Function) —— “加工转换”**
+
+**特征**：接收一个参数，**返回一个结果**（类型可以不同）。
+**典型场景**：`map`, `stream` 数据转换。
+
+| 接口名                  | 抽象方法签名        | Lambda 写法示例        | 记忆口诀                       |
+| :---------------------- | :------------------ | :--------------------- | :----------------------------- |
+| **`Function<T,R>`**     | `R apply(T t)`      | `s -> s.length()`      | **吃 T，吐 R**                 |
+| **`BiFunction<T,U,R>`** | `R apply(T t, U u)` | `(a, b) -> a + b`      | **吃两个，吐一个**             |
+| **`UnaryOperator<T>`**  | `T apply(T t)`      | `s -> s.toUpperCase()` | **吃 T，吐 T** (特殊 Function) |
+| **`BinaryOperator<T>`** | `T apply(T t, T t)` | `(x, y) -> x * y`      | **吃两个 T，吐一个 T**         |
+
+> 💡 **注意**：`UnaryOperator` 和 `BinaryOperator` 是 `Function` 的特例，输入输出类型必须一致，常用于数学运算或字符串拼接。
+
+
+
+**4. 断言型 (Predicate) —— “是非判断”**
+
+**特征**：接收一个参数，**返回 boolean**。
+**典型场景**：`filter`, `if` 条件判断。
+
+| 接口名                 | 抽象方法签名             | Lambda 写法示例          | 记忆口诀           |
+| :--------------------- | :----------------------- | :----------------------- | :----------------- |
+| **`Predicate<T>`**     | `boolean test(T t)`      | `s -> s.startsWith("A")` | **吃一个，吐真假** |
+| **`BiPredicate<T,U>`** | `boolean test(T t, U u)` | `(a, b) -> a > b`        | **吃两个，吐真**   |
+
+**5. 原始类型特化版 (Primitive Specializations)**
+
+**特征**：为了避免自动装箱/拆箱的性能损耗，针对 `int`, `long`, `double` 提供了专用接口。
+**命名规则**：`Xxx` + `功能` (如 `IntConsumer`, `LongSupplier`, `DoubleFunction`)。
+
+| 接口名                  | 抽象方法签名                          | 为什么用它？                                 |
+| :---------------------- | :------------------------------------ | :------------------------------------------- |
+| **`IntConsumer`**       | `void accept(int value)`              | 处理 `int` 流，避免 `Integer` 装箱           |
+| **`IntSupplier`**       | `int getAsInt()`                      | 返回 `int`                                   |
+| **`IntFunction<R>`**    | `R apply(int value)`                  | 输入 `int`，输出任意 `R`                     |
+| **`ToIntFunction<T>`**  | `int applyAsInt(T value)`             | 输入任意 `T`，输出 `int` (常用于 `mapToInt`) |
+| **`IntUnaryOperator`**  | `int applyAsInt(int value)`           | 输入 `int`，输出 `int`                       |
+| **`IntBinaryOperator`** | `int applyAsInt(int left, int right)` | 输入两个 `int`，输出 `int`                   |
 
 | 函数式接口             | 参数类型 | 返回类型 | 抽象方法名 | 描述                          | 常用默认方法               |
 | ---------------------- | -------- | -------- | ---------- | ----------------------------- | -------------------------- |
@@ -1074,40 +1142,25 @@ public static void repeat(int n,Runnable action)
 | **BinaryOperator\<T>** | T,T      | T        | apply      | 对T类型进行二元操作并返回结果 | andThen, maxBy, minBy      |
 | **Predicate\<T>**      | T        | boolean  | test       | 对T类型进行条件判断           | and, or, negate, isEqual   |
 | **BiPredicate\<T,U>**  | T,U      | boolean  | test       | 对T和U类型进行条件判断        | and, or, negate            |
+| **Comparator\<T>**     | T,T      | int      | compare    | 比较同类型大小                |                            |
 
 ##### 										                   	
 
-#####                                                                                                表 6-2 基本类型的函数式接口
-
-| 函数式接口             | 参数类型 | 返回类型  | 抽象方法名     |
-| ---------------------- | -------- | --------- | -------------- |
-| `BooleanSupplier`      | none     | `boolean` | `getAsBoolean` |
-| `<P>Supplier`          | none     | `P`       | `getAsP`       |
-| `<P>Consumer`          | `P`      | `void`    | `accept`       |
-| `Obj<P>Consumer<T>`    | `T, P`   | `void`    | `accept`       |
-| `<P>Function<T>`       | `P`      | `T`       | `apply`        |
-| `<P>To<Q>Function`     | `P`      | `Q`       | `applyAsQ`     |
-| `To<P>Function<T>`     | `T`      | `P`       | `applyAsP`     |
-| `To<P>BiFunction<T,U>` | `T, U`   | `P`       | `applyAsP`     |
-| `<P>UnaryOperator`     | `P`      | `P`       | `applyAsP`     |
-| `<P>BinaryOperator`    | `P, P`   | `P`       | `applyAsP`     |
-| `<P>Predicate`         | `P`      | `boolean` | `test`         |
-
-
+#####                                                                                                	
 
 #### 6.3.8 再谈Comparator
 
-Comparator接口包含很多方便的静态方法来创建比较器，这些方法可以用于lambda表达式或方法引用。
+​	Comparator接口包含很多方便的静态方法来创建比较器，这些方法可以用于lambda表达式或方法引用。
 
-静态方法comparing方法根据对象的某个属性（键）创建一个Comparator，它接受一个函数，该函数从对象中提取一个可比较的键，然后返回一个根据该键进行比较的Comparator
+​	静态方法comparing方法根据对象的某个属性（键）创建一个Comparator，它接受一个函数，该函数从对象中提取一个可比较的键，然后返回一个根据该键进行比较的Comparator
 
 ```java
 Arrays.sort(people,Comparing(Person::getName)); //Comparing接受一个函数，而Person::getName是一个方法引用
 ```
 
-现在该数组按照人名来进行比较排序。
+​	现在该数组按照人名来进行比较排序。
 
-
+​	
 
 
 
