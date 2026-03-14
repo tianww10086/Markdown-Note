@@ -222,7 +222,7 @@ x = new Comparable(...); //ERROR
 Comparable x; //ok
 ```
 
-==**接口变量必须引用实现了接口的类对象**==，如上例的Employee类：
+==**接口变量必须引用实现了接口的类对象**==，或者匿名内部类和lambda表达式 如上例的Employee类：
 
 ```java
 x=new Employee(...);  //ok
@@ -542,9 +542,7 @@ class TimePrinter implements ActionListener
 
 #### 6.2.2 Comparator 接口
 
-​	想要使用Arrarys.sort对一个对象数组排序,那么该对象所属的类就必须实现了Comparable接口。可以对一个字符串数组进行排序，因为String类已经实现了
-
-Comparable\<String\>。
+​	想要使用Arrarys.sort对一个对象数组排序,那么该对象所属的类就必须实现了Comparable接口。可以对一个字符串数组进行排序，因为String类已经实现了`Comparable\<String\>`。
 
 ​	假设希望按长度递增的顺序对字符串进行排序，而不是按字典顺序进行排序。要处理这种情况，Arrays.sort方法还有第二个版本。参数为一个数组和一个比较器（comparator)
 
@@ -613,7 +611,7 @@ class LengthCompareString implements Comparator<String>
 
 #### 6.2.3 对象克隆
 
-先回忆为一个包含对象引用的对象建立副本时会发生什么，原变量和副本都是同一个对象的引用，这说明，任何一个变量改变都会影响另一个变量。
+​	先回忆为一个包含对象引用的对象建立副本时会发生什么，原变量和副本都是同一个对象的引用，这说明，任何一个变量改变都会影响另一个变量。
 
 ```java
       Employee original = new Employee("田韦韦",7000,2029,10,12);
@@ -624,7 +622,7 @@ class LengthCompareString implements Comparator<String>
       System.out.println(original.toString()); //当改变其copy变量的值后，original也会改变
 ```
 
-如果希望copy是一个新对象，它的初始状态与original相同，但是之后它们会有各自会有自己不同的状态，这种情况下就需要使用clone方法。
+​	如果希望copy是一个新对象，它的初始状态与original相同，但是之后它们会有各自会有自己不同的状态，这种情况下就需要使用clone方法。
 
 ```java
 Employee copy = original.clone();
@@ -737,7 +735,7 @@ Arrays.sort(Strings,new LengthCompareString);
 -> first.length() - second.length()
 ```
 
-**lambda表达式就是一个代码块**。如果代码要完成的计算无法放在一个表达式中，就可以像写方法一样，把这些代码放在{}中，并包含显示的return语句。
+​	**lambda表达式就是一个代码块**。如果代码要完成的计算无法放在一个表达式中，就可以像写方法一样，把这些代码放在{}中，并包含显示的return语句。
 
 ```java
 (String first,String second)->
@@ -768,7 +766,7 @@ Comparator<Stirng> comp =
     first.length()-second.length();
 ```
 
-这里，编译器可以推导出first和second必然是字符串，因为lambda表达式将赋值给一个字符串比较器。
+这里，编译器可以通过推导出first和second必然是字符串，因为lambda表达式将赋值给一个字符串比较器。
 
 
 
@@ -933,9 +931,9 @@ class TimedGreeter extends Greeter
 ​	构造器引用与方法引用很相似，底层实现与对应的Lmabda表达式完全等价，**它们必须赋值给一个匹配的函数式接口，或是在需要函数式接口实例的地方使用**。 如果一个Lambda表达式里只做了一件事——调用某个方法（或构造器），那么就可以考虑使用：：操作符把它替换成更简洁的方法引用或构造器引用，它让你能够**直接引用一个类的构造方法**，代替功能相同的 Lambda 表达式
 
 ```java
-// 传统 Lambda 写法
+// 传统 Lambda 写法 ，通过size创建 大小为size的字符串数组
 Function<Integer, String[]> arrayCreator1 = size -> new String[size];
-
+	
 // 构造器引用写法
 Function<Integer, String[]> arrayCreator2 = String[]::new;
 
@@ -1152,13 +1150,62 @@ public static void repeat(int n,Runnable action)
 
 ​	Comparator接口包含很多方便的静态方法来创建比较器，这些方法可以用于lambda表达式或方法引用。
 
-​	静态方法comparing方法根据对象的某个属性（键）创建一个Comparator，它接受一个函数，该函数从对象中提取一个可比较的键，然后返回一个根据该键进行比较的Comparator
+​	**静态方法comparing方法根据对象的某个属性（键）创建一个Comparator，它接受一个函数，该函数从对象中提取一个可比较的键，然后返回一个根据该键进行比较的Comparator**
 
 ```java
 Arrays.sort(people,Comparing(Person::getName)); //Comparing接受一个函数，而Person::getName是一个方法引用
 ```
 
 ​	现在该数组按照人名来进行比较排序。
+
+​	方法原型：
+
+```java
+public static <T,U extends Comparable<? super U>> Comparator<T> comparing(
+	Function<? superT,?extends U> KeyExtractor)**
+```
+
+**1. 泛型参数声明**
+
+- `T`: 要比较的对象的类型。
+
+- `U`:从`T`对象中提取出来的键的类型，比如`String`、`Integer`等。这个键必须是可比较的，所以`U`必须实现`Comparable`接口
+
+- `U extends Comparable<? super U>`。的含义
+
+  - `U`本身必须是`Comparable`的子类型（实现了该接口）
+
+  - `Comparable<? super U>`表示U可以和它自己的父类型比较
+
+    例如，`String`实现了`Comparable<String>`，所以它可以和自己比较；而`Integer`实现了`Comparable<Integer>`
+
+    这种写法比 `U extends Comparable<U>` 更灵活，它允许 `U` 继承自某个已经实现了 `Comparable` 的父类。比如，如果有一个类 `MyInteger` 继承自 `Integer`，`Integer` 已经实现了 `Comparable<Integer>`，那么 `MyInteger` 实际上也可以与 `Integer` 比较，因此 `MyInteger` 可以满足 `Comparable<? super MyInteger>`（因为 `Integer` 是 `MyInteger` 的父类型）。
+    但实际中，`U` 通常就是实现了 `Comparable` 的类本身，所以可以简单理解为 `U` 必须可以比较。
+
+
+
+
+**2. 返回值声明**
+
+​	`Comparator<T>`表示返回一个比较器。
+
+​	返回一个比较器，它可以比较两个 `T` 类型的对象。这个比较器内部是这样工作的：
+
+1. 调用 `keyExtractor.apply(a)` 获取对象 `a` 的键 `ka`。
+2. 调用 `keyExtractor.apply(b)` 获取对象 `b` 的键 `kb`。
+3. 返回 `ka.compareTo(kb)` 的结果（因为 `U` 实现了 `Comparable`，所以可以直接调用 `compareTo`）。
+
+
+
+
+
+**3. 方法参数声明**
+
+​	`Function<? super T, ? extends U> keyExtractor`
+
+​	该函数接口表示接收一个参数并返回一个结果。
+
+​	提供一个**键提取函数**（从对象中提取用于比较的值），comparing方法自动构建一个比较器，这个比较器会用提取出来的键进行自然排序。
 
 ​	
 
@@ -1941,9 +1988,7 @@ public static <T> void sort(T[]a,Comparetor<? super T> c)
     public static void main(String[] args){
         //用匿名内部类实现接口
        Student[] sts = new Student[10]; //定义数组，存储10个学生
-		Comparator<Student> comparator = new Comparator<Student>(){
-            
-        }
+		Comparator<Student> comparator = new Comparator<Student>(){}
         Arrays.sort(sts,new Comparator<Student>(){
             @Override
             public int compare(Student o1, Student o2) {
