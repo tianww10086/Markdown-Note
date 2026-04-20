@@ -10,7 +10,7 @@
 
 ```java
 var contents = Files.readString(Path.of("alice.txt"));  //Read file into String
-List<String> words = List.of(contends.split("\\PL+"));
+List<String> words = List.of(contents.split("\\PL+"));
 ```
 
 现在迭代它：
