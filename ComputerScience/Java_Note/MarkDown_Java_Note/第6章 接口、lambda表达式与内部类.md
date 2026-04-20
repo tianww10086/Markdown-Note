@@ -278,6 +278,33 @@ class Employee implements Cloneable,Comparable
 
 
 
+接口中的抽象方法不用显式声明，会隐式的添加`public abstract`
+
+```java
+public interface Powered extends Moveable
+{
+  double milesPerGallon();
+  double SPEED_LIMIT=95;
+}
+//等价于
+public interface Powered extends Moveable
+{
+  public abstract double milesPerGallon();
+  double SPEED_LIMIT=95;
+}
+```
+
+
+
+接口中可以包含如下：
+
+1. 只能有常量字段（所有字段自动隐含`public static final`，没有实例变量，不能保存对象状态）
+2. 支持抽象方法（隐式声明`public abstract`）、默认方法、静态方法。私有方法
+
+
+
+
+
 #### 6.1.3 接口与抽象类
 
 如果知道了抽象类的内容，会产生为什么不直接将Comparable这样的接口设计为抽象类的疑问。
@@ -1112,7 +1139,7 @@ public static void repeat(int n,Runnable action)
 | 接口名                 | 抽象方法签名             | Lambda 写法示例          | 记忆口诀           |
 | :--------------------- | :----------------------- | :----------------------- | :----------------- |
 | **`Predicate<T>`**     | `boolean test(T t)`      | `s -> s.startsWith("A")` | **吃一个，吐真假** |
-| **`BiPredicate<T,U>`** | `boolean test(T t, U u)` | `(a, b) -> a > b`        | **吃两个，吐真**   |
+| **`BiPredicate<T,U>`** | `boolean test(T t, U u)` | `(a, b) -> a > b`        | **吃两个，吐真假** |
 
 **5. 原始类型特化版 (Primitive Specializations)**
 
