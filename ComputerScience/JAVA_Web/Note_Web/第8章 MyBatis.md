@@ -21,7 +21,7 @@
         </dependency>
 ```
 
- 	每个基于`MyBatis`的应用都是以一个`SqlSessionFactory`的实例为核心。而该实例通过`SqlSessionFactoryBuilder`获得，`SqlSessionFactoryBuilder`则是通过**XML配置文件**或者是**一个预先配置的`Configuration`实例**来构建出`SqlSessionFactory`实例。
+​	每个基于`MyBatis`的应用都是以一个`SqlSessionFactory`的实例为核心。而该实例通过`SqlSessionFactoryBuilder`获得，`SqlSessionFactoryBuilder`则是通过**XML配置文件**或者是**一个预先配置的`Configuration`实例**来构建出`SqlSessionFactory`实例。
 
 ​	从`XML`文件中构建出`SqlSessionFactory`实例非常简单，可以使用类路径下的资源文件配置，也可以使用输入流实例配置。我们首先介绍`XML`配置文件中对`Mybatis`系统的核心设置：比如**获取数据库连接实例的数据源（DataSource），以及决定事务作用域和控制方式的事务管理器**
 
@@ -260,7 +260,7 @@ SqlSessionFactory factory = new SqlSessionFactoryBuilder().build(reader, environ
 <properties resource="config/db.properties" />
 ```
 
-​	第二张希望你通过url来加载`properties`文件：
+​	第二种希望你通过url来加载`properties`文件：
 
 ```xml
 <properties url="file:///G:/myconfig/db.properties" />
@@ -272,6 +272,23 @@ SqlSessionFactory factory = new SqlSessionFactoryBuilder().build(reader, environ
 
 ​	当你使用build传入了`Properties`对象，而且配置文件中也有`<properties>`时，build传入的对象优先级更高。
 
-#### 8.4.2 properties
 
-​	 
+
+#### 8.4.2 typeAliases
+
+​	该标签可为Java类型设置一个缩写名字，它仅用于XML配置，意在降低冗余的全限定类目书写。例如：
+
+```xml
+<typeAliases>
+	<typeAlias alias="Autor" type = "domain.blog.Autor"/>
+    <typeAlias alias= "Blog" type = "domain.blog.Blog"/>
+</typeAliases>
+```
+
+
+
+
+
+## 8.5 实践案例
+
+​	
