@@ -48,7 +48,40 @@
 </configuration>
 ```
 
-​	${}里面是需要你填入的对应信息。比如`driver`是数据库连接的驱动，`url`是数据库的定位地址。一般来说，该`XML`文件的名字是：`mybatis-config.xml`。mappers 元素则包含了一组映射器（mapper），这些映射器的 XML 映射文件包含了 SQL 代码和映射定义信息
+​	${}里面是需要你填入的对应信息。比如`driver`是数据库连接的驱动，`url`是数据库的定位地址，如：` jdbc:mysql://localhost:3306/数据库名`，。一般来说，该`XML`文件的名字是：`mybatis-config.xml`。mappers 元素则包含了一组映射器（mapper），这些映射器的 XML 映射文件包含了 SQL 代码和映射定义信息
+
+​	示例；
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <typeAliases>
+        <package name="com.tww.pojo"/>
+    </typeAliases>
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <!-- 数据库的连接信息 -->
+                <property name="driver" value="com.mysql.cj.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/teaching"/>
+                <property name="username" value="root"/>
+                <property name="password" value="119034"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <mappers>
+        <!--加载Sql映射文件-->
+        <!--mapper resource="com/tww/mapper/StudentMapper.xml" -->
+        <!-- Mapper代理方式 ：包扫描 -->
+        <package name="com.tww.mapper"/>
+    </mappers>
+</configuration>
+```
+
+
 
 ​	除此之外，我们还需要创建一个xml文件，该文件与执行SQL语句息息相关，文件名一般为：`表名+Mapper`。比如对Student表操作就取名`StudentMapper.xml`。下面是简单示例
 
@@ -545,5 +578,188 @@ public class User {
 
 
 
+## 8.6 动态SQL
+
+​	动态SQL可以解决为了根据不同条件拼接SQL语句的问题。**动态SQL就是指在程序运行时，根据你传入的参数不同，自动拼接出不同的SQL语句**
+
+​	在目前的版本中，有下面几种动态SQL:
+
+- if
+- choose（when，otherwise）
+- trim（where，set）
+- foreach
 
 
+
+#### 8.6.1 if
+
+```xml
+<select id="findActiveBlogWithTitleLike"
+     resultType="Blog">
+  SELECT * FROM BLOG
+  WHERE state = ‘ACTIVE’
+  <if test="title != null">
+    AND title like #{title}
+  </if>
+</select>
+```
+
+​	`test`里面是条件表达式，如果条件为真，则传递的SQL语句包含if代码块的内容。所以这个映射器提供了可选的查找文本功能，如果不传入`title`，那么所有处于`ACTIVE`状态的BLOG都会返回，如果传入了`title`参数，那么就会对`title`一列进行模糊查找并返回对于的BLOG结果
+
+​	也可以同时对两个参数进行可选搜索，只需要加入另外一个条件即可：
+
+```xml
+<select id="findActiveBlogLike"
+     resultType="Blog">
+  SELECT * FROM BLOG WHERE state = ‘ACTIVE’
+  <if test="title != null">
+    AND title like #{title}
+  </if>
+  <if test="author != null and author.name != null">
+    AND author_name like #{author.name}
+  </if>
+</select>
+```
+
+
+
+#### 8.6.2 choose、when、otherwise
+
+​	当年只是想从多个条件中选择一个使用，这种情况可以使用`choose`元素，它有点像Java中的`swtich`语句
+
+```xml
+<select id="findActiveBlogLike"
+     resultType="Blog">
+  SELECT * FROM BLOG WHERE state = ‘ACTIVE’
+  <choose>
+    <when test="title != null">
+      AND title like #{title}
+    </when>
+    <when test="author != null and author.name != null">
+      AND author_name like #{author.name}
+    </when>
+    <otherwise>
+      AND featured = 1
+    </otherwise>
+  </choose>
+</select>
+```
+
+​	`choose`元素提供一系列选择，这个选择是用`when`元素，包含的，当他满足`when里面的test`条件时，就会插入这个SQL语句。而`otherwise`只有在没有可匹配的when时，才会插入。
+
+​	
+
+#### 8.6.3 trim、where、set
+
+​	下面介绍一个问题，以及怎么解决它
+
+```xml
+<select id="findActiveBlogLike"
+     resultType="Blog">
+  SELECT * FROM BLOG
+  WHERE
+  <if test="state != null">
+    state = #{state}
+  </if>
+  <if test="title != null">
+    AND title like #{title}
+  </if>
+  <if test="author != null and author.name != null">
+    AND author_name like #{author.name}
+  </if>
+</select>
+```
+
+​	如果没有匹配的条件，最终这条SQL会变成这样：
+
+```xml
+SELECT * FROM BLOG
+WHERE
+```
+
+​	这会导致查询失败，如果匹配的只是第二个条件呢，这条SQL会是这样：
+
+```xml
+SELECT * FROM BLOG
+WHERE
+AND titile like 'someTitle'
+```
+
+​	在这里，只需要一处简单的改动：
+
+```xml
+<select id="findActiveBlogLike"
+     resultType="Blog">
+  SELECT * FROM BLOG
+  <where>
+    <if test="state != null">
+         state = #{state}
+    </if>
+    <if test="title != null">
+        AND title like #{title}
+    </if>
+    <if test="author != null and author.name != null">
+        AND author_name like #{author.name}
+    </if>
+  </where>
+</select
+```
+
+​	*where* 元素只会在子元素返回任何内容的情况下才插入 “WHERE” 子句。而且，若子句的开头为 “AND” 或 “OR”，*where* 元素也会将它们去除。
+
+​	
+
+​	如果 *where* 元素与你期望的不太一样，你也可以通过自定义 trim 元素来定制 *where* 元素的功能。比如，和 *where* 元素等价的自定义 trim 元素为：
+
+```
+<trim prefix="WHERE" prefixOverrides="AND |OR ">
+  ...
+</trim>
+```
+
+*prefixOverrides* 属性会忽略通过管道符分隔的文本序列（注意此例中的空格是必要的）。上述例子会移除所有 *prefixOverrides* 属性中指定的内容，并且插入 *prefix* 属性中指定的内容。
+
+
+
+​	用于动态更新语句的类似解决方案叫做 *set*。*set* 元素可以用于动态包含需要更新的列，忽略其它不更新的列。比如：
+
+```
+<update id="updateAuthorIfNecessary">
+  update Author
+    <set>
+      <if test="username != null">username=#{username},</if>
+      <if test="password != null">password=#{password},</if>
+      <if test="email != null">email=#{email},</if>
+      <if test="bio != null">bio=#{bio}</if>
+    </set>
+  where id=#{id}
+</update>
+```
+
+这个例子中，*set* 元素会动态地在行首插入 SET 关键字，并会删掉额外的逗号（这些逗号是在使用条件语句给列赋值时引入的）。
+
+​	
+
+
+
+#### 8.6.4 foreach
+
+动态 SQL 的另一个常见使用场景是对集合进行遍历（尤其是在构建 IN 条件语句的时候）。比如：
+
+```
+<select id="selectPostIn" resultType="domain.blog.Post">
+  SELECT *
+  FROM POST P
+  WHERE ID in
+  <foreach item="item" index="index" collection="list"
+      open="(" separator="," close=")">
+        #{item}
+  </foreach>
+</select>
+```
+
+​	*foreach* 元素的功能非常强大，它允许你指定一个集合，声明可以在元素体内使用的集合项（item）和索引（index）变量。它也允许你指定开头与结尾的字符串以及集合项迭代之间的分隔符。这个元素也不会错误地添加多余的分隔符，看它多智能！
+
+​	**提示** 你可以将任何可迭代对象（如 List、Set 等）、Map 对象或者数组对象作为集合参数传递给 *foreach*。当使用可迭代对象或者数组时，index 是当前迭代的序号，item 的值是本次迭代获取到的元素。当使用 Map 对象（或者 Map.Entry 对象的集合）时，index 是键，item 是值。
+
+​	
