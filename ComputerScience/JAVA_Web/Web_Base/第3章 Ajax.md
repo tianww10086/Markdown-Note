@@ -96,8 +96,5 @@
 <script src="js/axios-0.18.0.js"></script>
 ```
 
-​	2.使用`Axios`发送请求，并获取响应结果
 
-```HTML
-```
 

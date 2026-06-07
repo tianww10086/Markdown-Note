@@ -442,7 +442,86 @@ Size s=Size.MEDIUM;
 
 
 
-#### 3.5.8 运算符优先级
+#### 3.5.8 Instanceof运算符
+
+​	`instanceof` 是 Java 的一个**二元运算符**（即需要两个操作数）。它用于**运行时**检查一个对象是否属于某个特定的类、子类、或是实现了某个接口。
+
+​	`Instanceof`必须严格遵守**左对象、右类**的语法顺序
+
+```java
+objectReference  instanceof  ClassNameOrInterface
+```
+
+​	例如，`Manager`是`Employee`的一个子类，如下判断为true：
+
+```java
+Employee manager = new Manager(...);
+
+if(manager instanceof Employee)
+    //为true
+```
+
+​	或者用于检查这个对象有没有实现对应的接口：
+
+```java
+String str ="Hello";
+if(str instanceof  Comparable<String>)
+    //为true
+```
+
+​	
+
+​	特殊值`null`的行为：
+
+```java
+null instanceof AnyClass //永远返回false
+```
+
+​	`null`不代表任何对象，不属于任何类，所以直接返回`false`。
+
+​	代码示例：
+
+```java
+class Employee {}
+class Manager extends Employee {}
+
+public class Test {
+    public static void main(String[] args) {
+        Employee e = new Manager();  // 向上转型
+
+        // 1. instanceof 检查
+        System.out.println(e instanceof Employee);  // true (因为Manager是Employee的子类)
+        System.out.println(e instanceof Manager);   // true (实际的运行时对象是Manager)
+        System.out.println(e instanceof Object);    // true (所有类都继承Object)
+
+        // 2. 如果不加判断直接强转，可能抛异常
+        if (e instanceof Manager) {
+            Manager m = (Manager) e;  // 安全转换
+            System.out.println("转换成功");
+        }
+    }
+}
+```
+
+​	
+
+​	只有可能存在继承关系的类，才能通过编译，下面的代码会报错：
+
+```java 
+String s = "Hello";
+if (s instanceof Integer) {  // ❌ 编译报错
+    // 编译错误：Inconvertible types; cannot cast 'String' to 'Integer'
+    // 因为 String 和 Integer 之间没有任何继承关系，编译器直接拒绝。
+}
+```
+
+
+
+​	
+
+
+
+#### 3.5.9 运算符优先级
 
 以下表格按优先级从高到低列出 Java 运算符（同一行内的运算符优先级相同）：
 
