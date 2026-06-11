@@ -1355,10 +1355,7 @@ public class ExampleBean{
 ​	在之前使用XML进行依赖注入的过程是这样。
 
 ```xml
-<bean id ="exampleBean" class="ExampleBean">
-	<property name="master" ref ="masterBean"/>
-</bean>
-<bean id="masterBean" class ="Master"/>
+	x1<bean id ="exampleBean" class="ExampleBean">2    <property name="master" ref ="masterBean"/>3</bean>4<bean id="masterBean" class ="Master"/>xml
 ```
 
 ​	现在使用按名称自动注入，变体是这样
@@ -1513,3 +1510,1172 @@ masters = {
 ​	也可以根据对Bean名称的模式匹配来现在`autowire`候选人，顶层的`<beans/>`元素在其`default-autowire-candidates`属性接收一个或多个模式。例如，要将自动注入候选状态限制在名称以`Repository`结尾的任何`bean`，请提供`*Respository`的值。要提供多个这样的模式，请用逗号分隔的列表定义它们。***Bean定义的`autowire-candidate`属性的明确值为true或false，这样的设置优先级高于模式匹配规则。**
 
 ​	**这并不意味着排除在外的Bean本身不能使用`autowiring`进行配置，相反，Bean本身不是自动注入到其他Bean的候选人**。
+
+
+
+
+
+
+
+## 2.5 Bean Scope
+
+​	当你创建一个Bean定义时，你创建了一个“配方”，用于创建是Bean定义（definition）是所定义的类的实际实例。Bean定义是一个“配方”的想法很重要，**因为它意味着，就像一个类一样，可以从一个“配方”中创建许多对象实例**
+
+​	不仅可以控制各种依赖和配置值，将其插入到特定Bean定义创建的对象中，**还可以控制从特定Bean定义创建的对象的scope。**，通过配置来选择你所创建的对象的scope。而不是在Java类别上烘托出一个对象的scope。`Bean`可以被定义时为部署在若干scope中的一个。
+
+​	`Spring`框架支持六个`scope`，其中4个只有在你使用`Web`感知（aware）的`ApplicationContext`时才可用。也可以创建一个自定义`scope`。
+
+​	下表描述了支持的`scope`:
+
+| Scope                                                        | 说明                                                         |
+| :----------------------------------------------------------- | :----------------------------------------------------------- |
+| [singleton](https://springdoc.cn/spring/core.html#beans-factory-scopes-singleton) | （默认情况下）为每个Spring IoC容器将单个Bean定义的Scope扩大到单个对象实例。 |
+| [prototype](https://springdoc.cn/spring/core.html#beans-factory-scopes-prototype) | 将单个Bean定义的Scope扩大到任何数量的对象实例。              |
+| [request](https://springdoc.cn/spring/core.html#beans-factory-scopes-request) | 将单个Bean定义的Scope扩大到单个HTTP请求的生命周期。也就是说，每个HTTP请求都有自己的Bean实例，该实例是在单个Bean定义的基础上创建的。只在Web感知的Spring `ApplicationContext` 的上下文中有效。 |
+| [session](https://springdoc.cn/spring/core.html#beans-factory-scopes-session) | 将单个Bean定义的Scope扩大到一个HTTP `Session` 的生命周期。只在Web感知的Spring `ApplicationContext` 的上下文中有效。 |
+| [application](https://springdoc.cn/spring/core.html#beans-factory-scopes-application) | 将单个Bean定义的 Scope 扩大到 `ServletContext` 的生命周期中。只在Web感知的Spring `ApplicationContext` 的上下文中有效。 |
+| [websocket](https://springdoc.cn/spring/web.html#websocket-stomp-websocket-scope) | 将单个Bean定义的 Scope 扩大到 `WebSocket` 的生命周期。仅在具有Web感知的 Spring `ApplicationContext` 的上下文中有效。 |
+
+
+
+#### 2.5.1 Signleton Scope
+
+​	只有一个单例`Bean`的共享实例被管理，所有对具有符合Bean定义的ID的Bean的请求都会被Spring容器返回特定的Bean实例。
+
+​	换句话说，当你定义了一个Bean定义，并且它被定义为`signleton`(默认行为)，**Spring IoC容器就会为该Bean定义的对象创建一个确切的实例，这个单一的实例被存储在这种单体Bean的缓存中，后续的请求和对改命名Bean的引用都会返回缓存的对象**。
+
+​	例如，你在XML文件中定义了一个Bean
+
+```xml
+    <bean id = "person" class="pojo.Person">
+        <constructor-arg name = "name" value="田韦韦"/>
+        <constructor-arg name="address" value="贵州"/>
+    </bean>
+```
+
+​	后续所有的对该Bean的请求都指向同一个引用：
+
+```java
+if(t==w){
+   System.out.println("单例Bean验证，即从Spring获取的同一个Bean是同一个引用");
+}
+```
+
+​	但是要区别，并不是只能在Beans里定义一个针对于该类的`bean`，单例`bean`是针对于ID（name）的。下面定义了两个类相同的`bean`，但ID不同：
+
+```xml
+    <bean id = "person" class="pojo.Person">
+        <constructor-arg name = "name" value="田韦韦"/>
+        <constructor-arg name="address" value="贵州"/>
+    </bean>
+
+    <bean id = "person2" class="pojo.Person">
+        <constructor-arg name = "name" value="石露"/>
+        <constructor-arg name="address" value="贵州"/>
+    </bean>
+```
+
+​	这是允许的，在Java代码中可以使用`getBean`方法获取该Bean。但要注意，`getBean`有多种重载方式，我们需要指定Bean的Id，如果只指定`.class`类型，Spring会不知道要获取哪个`Bean`，因为针对该类型的`Bean`有多个。下面是正确的获取方式：
+
+```java
+    public static void main(String[] args) {
+            //获取Ioc容器（ApplicationContext）
+        ApplicationContext ctx = new ClassPathXmlApplicationContext("applicationContext.xml");
+        ClientService clientService = (ClientService) ctx.getBean("clientService");
+        clientService.clientService_Say_Hi();
+        Person t = ctx.getBean("person",Person.class);
+        Person w = ctx.getBean("person2",Person.class);
+        if(t==w){
+            System.out.println("单例Bean验证，即从Spring获取的同一个Bean是同一个引用");
+        }else{
+			System.out.println("不同单例Bean验证，验证了单例Bean是针对于ID的，而不是针对于Class")
+        }
+    }
+```
+
+​	变量t和变量w是两个完全不同的引用，所以这条会走`else`线。
+
+​	Spring的`singleton Bean`概念与`Gang of Four(Gof)`模式书中定义的`singleton`模式不同。`GoF singleton`模式对对象范围进行了硬编码（Java代码），即每个`ClassLoder`创建一个仅有一个特定类的实例。
+
+​	而`Spring`单例的范围最好被描述为每个容器和每个bean。这意味着，如果你在一个`Spring`容器中为一个特定的类定义了一个`Bean`，`Spring`容器就会为该Bean定义的类创建一个且只有一个实例。下面展示了如何把一个Bean定义为`singleton`（默认行为，无需指定）
+
+```xml
+<bean id="accountService" class="com.something.DefaultAccountService"/>
+
+<!-- 下面的写法与上面完全等价，但属于冗余配置，因为 singleton 是默认作用域 -->
+<bean id="accountService"
+      class="com.something.DefaultAccountService"
+      scope="singleton"/>
+```
+
+> GoF(四人帮) 写的一本非常著名的书：`Elements of Reusable Object-Oriented Software(设计模式)`， 这本书提出了
+>
+> 23种经典设计模式，其中就包括
+>
+> - `Singleton`（单例模式）
+> - `Factory`（工厂模式）
+> - `Observer`（观察者模式）
+> - `Proxy`（代理模式）
+
+
+
+
+
+#### 2.5.2 Prototype Scope
+
+​	如果上面说的是单例模式，那么该模式和单例模式恰恰相反，它会导致每次对该特定Bean的请求都会创建一个新的Bean实例。
+
+​	下图说明了`Spring prototype scope`
+
+![image-20260609142128001](../IMG/image-20260609142128001.png)
+
+​	应该对所有有状态的`bean`使用`prototype` ，对无状态的bean使用`singleton scope`。（数据访问对象（DAO））通常不被配置为`prototype`，因为典型的DAO并不持有任何对状态。
+
+​	下面的例子在XML中定义了一个`prototype bean`
+
+```xml
+<bean id="accountService" class="com.something.DefaultAccountService" scope="prototype"/>
+```
+
+​	于其他`scope`相比，Spring并不管理`prototype Bean`的完整生命周期。**容器对`prototype`对象进行实例化、配置和其他方面的组装，并将其客户端，而对该`prototype`实例没有进一步记录。因此，尽管初始化生命周期回调方法在所有对象上被调用，而不考虑`scope`，==但在`prototype`的情况下，配置的销毁生命周期回调不会被调用，客户端代码必须清理`prototype score`内的对象，并释放原`prototype Bean`持有的昂贵资源。为了让Spring容器释放由`prototype scopeBean`持有的资源，可以尝试使用自定义Bean后处理器，它持有对需要清理Bean的引用==**
+
+​	在某些方面，`Spring`容器在`prototype scope Bean`方面的作用是代替Java的`new`操作。所有超过该点的生命周期管理必须由客户端处理。
+
+
+
+
+
+#### 2.5.3 `singleton Bean`和`prototype bean`依赖
+
+​	当你使用对`prototype Bean`有依赖的`singleton scope Bean`时，请注意依赖关系是在实例化时解析的。因此，如果你将一个`prototype scope`的Bean依赖性注入到一个`singleton scope`的Bean中。一个新的`prototype Bean`被实例化，然后被依赖注入到`singleton Bean`中。`prototype`实例是唯一提供给`singleton scope Bean`的实例，换句话说。
+
+​	`prototype bean`只被实例化了一次，然后被注入到了`singleton bean`中去，一直被`singleton bean`所持有。
+
+
+
+
+
+#### 2.5.4 Request、Session、Application和WebSocket Scope
+
+​	`request、session、apllication`和`websocket`scope只有在你使用Web感知的`Spring ApplicationContext`实现时才可用。如果你将这些scope与常规的Spring IoC容器（如`ClassPathXmlApplicationContext`）一起使用，就会抛出一个`IllegalStateException`。
+
+
+
+##### 1. 初始Web配置
+
+​	为了支持Bean在`request、session、apllication`和`websocket`级别的scope，在你定义Bean之前，需要一些小的初始配置。
+
+​	如果你已经在Spring Web MVC中访问scope内的Bean。实际上是在一个由Spring`DispatcherServlet`处理的请求（request）中，就不需要进行特别的设置。`DispatcherServlet`已经暴露了所有相关的状态。
+
+​	如果你使用`Servlet Web`容器，在Spring的`DispatcherServlet`之外处理请求， 你需要注册：`org.springframework.web.context.request.RequestContextLIstener ServletRequestListener`。这可以通过使用`WebApplicationInitializer`接口以编程方式完成，或者在你的Web应用程序的`web.xml`文件中添加以下声明：
+
+```xml
+<web-app>
+    ...
+    <listener>
+        <listener-class>
+            org.springframework.web.context.request.RequestContextListener
+        </listener-class>
+    </listener>
+    ...
+</web-app>
+```
+
+​	另外，如果你的监听器（listener）设置有问题，可以考虑使用Spring的 `RequestContextFilter`。过滤器（filter）的映射取决于周围的Web应用配置，所以你必须适当地改变它。下面的列表显示了一个Web应用程序的过滤器部分。
+
+```xml
+<web-app>
+    ...
+    <filter>
+        <filter-name>requestContextFilter</filter-name>
+        <filter-class>org.springframework.web.filter.RequestContextFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>requestContextFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+    ...
+</web-app>
+```
+
+
+
+##### 2. Request scope
+
+​	考虑以下用于Bean定义的XML配置
+
+```xml
+<bean id="loginAction" class="com.something.LoginAction" scope="request"/>
+```
+
+​	这表明该Bean是一个`request`请求。
+
+​	当使用注解驱动的组件或Java配置时，`@RequestScope`注解可以用来将一个组件分配到`request` scope。
+
+```java
+@RequestScope
+@Component
+public class LoginAction {
+    // ...
+}
+```
+
+
+
+
+
+##### 3.作为依赖的Scope Bean
+
+​	包含AOP知识，先跳过
+
+
+
+
+
+
+
+## 2.6 自定义Bean的性质
+
+​	Spring框架提供了许多接口，可以用它们来定制Bean的性质。
+
+- 生命周期回调
+- `ApplicationContextAware`和`BeanNameAware`
+- 其他`Aware`接口
+
+
+
+#### 2.6.1 生命周期回调
+
+​	为了与容器对Bean生命周期的管理进行交互，可以实现`Spring InitializingBean`和`DisposableBean`接口，容器为前者调用`afterPropertiesSet()`，为后者调用`destroy()`，让Bean在初始化和销毁你的Bean时执行某些动作
+
+​	Tip:
+
+​	JSR-250的 `@PostConstruct` 和 `@PreDestroy` 注解通常被认为是在现代Spring应用程序中接收生命周期回调的最佳实践。使用这些注解意味着你的Bean不会被耦合到Spring特定的接口。详情请参见 使用 [使用 `@PostConstruct` 和 `@PreDestroy`](https://springdoc.cn/spring/core.html#beans-postconstruct-and-predestroy-annotations)。
+
+如果你不想使用JSR-250注解，但你仍然想消除耦合，可以考虑用 `init-method` 和 `destroy-method` bean 定义元数据。
+
+​	
+
+##### 1.初始化回调
+
+​	`org.springframework.beans.factory.InitializingBean`接口让Bean在容器对Bean设置了所有必要的属性后执行初始化工作。`InitializingBean`接口指定了一个方法
+
+```java	
+void afterPropertiesSe() throws Exception
+```
+
+​	但是建议你不要使用该接口，因为它不必要地将代码与Spring耦合。**另外，我们建议使用`@PostConstruct`注解指定一个POJO初始方法**。
+
+​	在基于XML的配置元数据中，可以使用`init-method`属性来指定具有`void`无参数前面的方法名称。对于`Java`配置，可以使用`@Bean`的`initMethod`属性。考虑下面基于XML配置初始化回调方法的例子：
+
+```xml
+<bean id = "exampleInitBean" class-"exampkes.ExampleBean" init-method = "init"/>
+```
+
+​	对应的Java类
+
+```java
+public class ExampleBean {
+    public void init() {
+        // do some initialization work
+    }
+}
+
+```
+
+​	下面则是效果相同，但Spring官方不推荐的做法，因为它使类耦合了Spring的接口。
+
+```xml
+<bean id = "exampleInitBean" class-"exampkes.ExampleBean"/>
+```
+
+```java
+public class AnotherExampleBean implements InitializingBean {
+
+    @Override
+    public void afterPropertiesSet() {
+        // do some initialization work
+    }
+}
+```
+
+​	
+
+
+
+##### 2.销毁回调
+
+​	实现`org.springframework.beans.factory.DisposableBean`接口可以让Bean在包含它的容器被销毁时获得一个回调，`DisposableBean`接口指定了一个方法。
+
+```java
+void destroy() throws Exception
+```
+
+​	同样建议不要使用`DisposableBean`回调接口，因为它不必要地将代码耦合到Spring。建议使用`@PreDestory`注解或指定一个bean定义所支持的通用方法。对于基于XML的配置元数据，可以使用`<bean/>`上的`destory-method`属性，使用Java配置，可以使用`@Bean的destroyMethod`属性。
+
+​	下面是基于XML指定销毁回调方法的元数据定义：
+
+```xml
+<bean id="exampleInitBean" class="examples.ExampleBean" destroy-method="cleanup"/>
+```
+
+```java
+public class ExampleBean {
+
+    public void cleanup() {
+        // do some destruction work (like releasing pooled connections)
+    }
+}
+```
+
+​	下面的定义与上面的定义有完全相同的效果，使用实现Spring的接口来完成销毁回调。
+
+```java
+public class AnotherExampleBean implements DisposableBean {
+
+    @Override
+    public void destroy() {
+        // do some destruction work (like releasing pooled connections)
+    }
+}
+
+
+```
+
+​	这样的代码与Spring耦合，并不推荐
+
+
+
+
+
+##### 3. 默认的初始化和销毁方法
+
+​	通常的初始化和销毁方法名称为：`init()、initialize()、dispose()`。在理想情况下，所有开发者都会使用相同的方法名称。确保一致性
+
+​	你可以将Spring容器配置为**在每个Bean上“寻找”命名的初始化和销毁回调方法名称。这意味着，你可以为你的应用类使用名为init()的初始化回调，而不必为每个Bean定义配置`init-method="init"属性`。当Bean被创建时，Spring Ioc容器会调用该方法**
+
+​	请看下面的例子
+
+```java
+public class DefaultBlogService implements BlogService {
+
+    private BlogDao blogDao;
+
+    public void setBlogDao(BlogDao blogDao) {
+        this.blogDao = blogDao;
+    }
+
+    // this is (unsurprisingly) the initialization callback method
+    public void init() {
+        if (this.blogDao == null) {
+            throw new IllegalStateException("The [blogDao] property must be set.");
+        }
+    }
+}
+
+```
+
+​	然后可以在一个类似以下的bean中使用该类
+
+```xml
+<beans default-init-method="init">
+
+    <bean id="blogService" class="com.something.DefaultBlogService">
+        <property name="blogDao" ref="blogDao" />
+    </bean>
+</beans>
+```
+
+​	**顶层`<beans/>`元素属性中`default-init-method`属性的存在会使Spring IoC容器识别出Bean类为`init`的方法作为初始化方法的回调。当一个Bean被创建和装配时，如果Bean类有这样的方法，它就会在适当的时候被调用**
+
+​	同样的，顶层`<beans/>`元素上的`default-destory-method`属性，类似第配置`destroy`方法回调。
+
+​	如果现有的Bean类已经有与惯例（名字不一样）的回调方法，可以通过使用`<bean/>`本身的`init-method`和`destroy-method`属性来指定方法的名称，从而覆盖顶层设置的默认值。
+
+​	
+
+
+
+##### 4. 结合生命周期机制
+
+​	从Spring2.5开始，有三个选项来控制Bean的生命周期行为：
+
+- `InitializingBean`和`DisposableBean`callback接口
+- 自定义`init()`and`destroy()`方法
+- `@PostConstruct`和`@PreDestroy`注解
+
+​	如果为一个bean配置来多个生命周期机制，并且每个机制都配置来不同的方法名称，那么每个配置的方法都会按照后面说明列出的顺序运行。然而，如果同一方法名称被配置，例如，`init()`为一个初始化方法用于多个这些生命周期机制，则该方法将被运行一次
+
+​	为同一个Bean配置多个生命周期机制，具有不同的初始化方法，调用顺序如下：
+
+1. 注解了 `@PostConstruct` 的方法。
+2. `afterPropertiesSet()`，如 `InitializingBean` 回调接口所定义。
+3. 一个自定义配置的 `init()` 方法。
+
+​	销毁方法的调用顺序是一样的。
+
+1. 注解了 `@PreDestroy` 的方法。
+2. `destroy()`，正如 `DisposableBean` 回调接口所定义的那样。
+3. 一个自定义配置的 `destroy()` 方法。
+
+
+
+
+
+##### 5. 启动和关闭的回调
+
+​	`Lifecycle`接口定义了任何有自己的生命周期要求的对象的基本方法。
+
+```java
+public interface Lifecycle {
+
+    void start();
+
+    void stop();
+
+    boolean isRunning();
+}
+```
+
+​	任何`Spring`管理的对象都可以实现`Lifecycle`接口。当然，当`ApllicationContext`本身收到启动和停止信号时，它将调用级联到定义在该上下文中的所有`Lifecycle`实现。它通过委托给一个`LifecycleProcessor`来实现。
+
+```java
+public interface LifecycleProcessor extends Lifecycle {
+
+    void onRefresh();
+
+    void onClose();
+}
+```
+
+​	`LifecycleProcessor`本身就实现了`Lifecycle`接口，还添加了另外两个方法来对`context`的刷新和关闭做出反应。
+
+
+
+##### 6. 在非Web应用中关闭Spring IoC容器
+
+​	如果你在非Web应用环境中使用Spring的IoC容器，请向JVM注册一个`shutdown hook`，并在你的`Singleton Bean`上调用相关的`destory`方法，从而释放所有资源。
+​	要注册一个`shutdown hook`，请调用`registerShutdownHook()`方法，该方法在`ConfigurableApplicationContext`接口上声明。
+
+```java
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+
+public final class Boot {
+
+    public static void main(final String[] args) throws Exception {
+        ConfigurableApplicationContext ctx = new ClassPathXmlApplicationContext("beans.xml");
+
+        // add a shutdown hook for the above context...
+        ctx.registerShutdownHook();
+
+        // app runs here...
+
+        // main method exits, hook is called prior to the app shutting down...
+    }
+}
+```
+
+
+
+
+
+## 2.7 Bean定义的继承
+
+​	一个 BeanDefinition 可以包含大量配置信息，例如构造器参数、属性值、初始化方法、销毁方法、工厂方法等。
+
+​	子 BeanDefinition 可以继承父 BeanDefinition 中的配置，并根据需要覆盖或新增配置项。这样可以避免在多个 Bean 中重复编写相同配置。
+
+​	在 XML 配置中，可以通过 `parent` 属性指定父 BeanDefinition：
+
+```xml
+<bean id="inheritedTestBean"
+      abstract="true"
+      class="org.springframework.beans.TestBean">
+    <property name="name" value="parent"/>
+    <property name="age" value="1"/>
+</bean>
+
+<bean id="inheritsWithDifferentClass"
+      parent="inheritedTestBean"
+      class="org.springframework.beans.DerivedTestBean"
+      init-method="initialize">
+    <property name="name" value="override"/>
+</bean>
+```
+
+​	需要注意的是，这里的继承并不是 Java 类继承，而是 BeanDefinition 继承。
+
+​	Spring 会先合并父子 BeanDefinition：
+
+```text
+class = DerivedTestBean
+name = override
+age = 1
+init-method = initialize
+```
+
+​	然后根据合并后的配置创建 Bean，相当于执行：
+
+```java
+DerivedTestBean bean = new DerivedTestBean();
+bean.setName("override");
+bean.setAge(1);
+bean.initialize();
+```
+
+​	因此，子 Bean 对应的类不一定要继承父 Bean 对应的类，但必须能够接受从父 BeanDefinition 继承而来的配置（例如具有对应的属性或 Setter 方法），否则 Spring 在创建 Bean 时会报错。
+
+​	子Bean定义从**父级继承`scope`、构造函数参数值、属性值和方法重写，也可以选择添加新的值，你指定的如何scope、初始化方法、销毁方法或`static`工厂方法设置都会覆盖相应的父类设置**
+
+​	其余的设置来自于子定义：**依赖、自动注入模式、依赖检查、`singleton`和懒加载**。换句话说，这些设置并不会从父Bean定义继承到子Bean定义，而是看子Bean本身是怎么设置的。
+
+
+
+​	前面的例子通过使用`abstract`属性明确地将父类`Bean`定义标记为抽象的。如果父类没有指定一个类，就需要明确地将父Bean定义标记为抽象的。
+
+```xml
+<bean id="inheritedTestBeanWithoutClass" abstract="true">
+    <property name="name" value="parent"/>
+    <property name="age" value="1"/>
+</bean>
+
+<bean id="inheritsWithClass" class="org.springframework.beans.DerivedTestBean"
+        parent="inheritedTestBeanWithoutClass" init-method="initialize">
+    <property name="name" value="override"/>
+    <!-- age will inherit the value of 1 from the parent bean definition-->
+</bean>
+
+```
+
+​	父类Bean不能被单独的实例化，因为它是不完整的，而且它也被明确地标记为`abstract`。当一个定义是`abstract`的，它只能作为一个纯模板Bean定义使用，作为子定义的父定义（只要被标记为`abstract`，不管它有没有`class`属性，都不能单独实例化）。
+
+​	试图单独使用这样的`abstract`父类bean，通过将其作为另一个Bean的`ref`属性来引用，或者用父类bean的ID将进行显示的`getBean()`调用。会返回一个错误。同样的，容器内部的`preInstantiateSingletons()`方法也会忽略被定义为抽象的Bean定义。
+
+> `preInstantiateSingletons`是容器里的一个启动阶段方法
+> 它会在容器启动完成后，**提前实例化所有非懒加载的单例Bean**
+
+​	**Note**:`ApplicationContext` 默认预设了所有的singleton。因此，重要的是（至少对于singleton Bean来说），如果你有一个（父）Bean定义，你打算只作为模板使用，并且这个定义指定了一个类，你必须确保将 *abstract* 属性设置为 `true`，否则应用上下文将实际（试图）预实化 `abstract` Bean。
+
+
+
+## 2.8 容器扩展点
+
+​	暂时用不上，跳过
+
+
+
+
+
+## 2.9 基于注解的容器配置
+
+​	基于注解的配置+`Java Config`的模式是现代化Spring boot开发的主流方式。XML配置只适合在学习时理解使用，XML配置方式基本已经被淘汰
+
+​	基于注解的配置提供了XML设置的替代方法，它依靠字节码元数据来注入数据，开发者通过在相关的类、方法或字段声明上使用注解，将配置移入组件类本身。例如`@Autowired`注解提供了与注入协作者（`Autowiring Collaborators`）中所描述相同的功能，而且控制范围更细，适用性更广
+
+​	
+
+#### 2.9.1 使用`@Autowired`
+
+​	可以将`@Autowired`注解应用于构造函数
+
+```java
+public class MovieRecommender {
+
+    private final CustomerPreferenceDao customerPreferenceDao;
+
+    @Autowired
+    public MovieRecommender(CustomerPreferenceDao customerPreferenceDao) {
+        this.customerPreferenceDao = customerPreferenceDao;
+    }
+
+    // ...
+}
+
+
+```
+
+​	从Spring Framework 4.3开始，如果目标Bean一开始就只定义了一个构造函数，那么在这样的构造函数上就不再需要 `@Autowired` 注解。然而，如果有几个构造函数，而且没有主要/默认构造函数，那么至少有一个构造函数必须用 `@Autowired` 注解，以便指示容器使用哪一个
+
+​	也可以将`@Autowired`注解应用于传统的`setter`方法。
+
+```java
+public class SimpleMovieLister {
+
+    private MovieFinder movieFinder;
+
+    @Autowired
+    public void setMovieFinder(MovieFinder movieFinder) {
+        this.movieFinder = movieFinder;
+    }
+
+    // ...
+}
+```
+
+​	也可以将注解应用于具有任意名称和多个参数的方法
+
+```java
+public class MovieRecommender {
+
+    private MovieCatalog movieCatalog;
+
+    private CustomerPreferenceDao customerPreferenceDao;
+
+    @Autowired
+    public void prepare(MovieCatalog movieCatalog,
+            CustomerPreferenceDao customerPreferenceDao) {
+        this.movieCatalog = movieCatalog;
+        this.customerPreferenceDao = customerPreferenceDao;
+    }
+
+    // ...
+}
+
+```
+
+​	也可以将`@Autowired`应用于字段，甚至将其于构造函数混合
+
+```java
+public class MovieRecommender {
+
+    private final CustomerPreferenceDao customerPreferenceDao;
+
+    @Autowired
+    private MovieCatalog movieCatalog;
+
+    @Autowired
+    public MovieRecommender(CustomerPreferenceDao customerPreferenceDao) {
+        this.customerPreferenceDao = customerPreferenceDao;
+    }
+
+    // ...
+}
+```
+
+​	也可以指示Spring从`ApplicationContext`中提供所有特定类型的`Bean`，方法是将`@Autowired`注解添加到期望该类型数组的字段或方法中
+
+```java
+public class MovieRecommender {
+
+    @Autowired
+    private MovieCatalog[] movieCatalogs;
+
+    // ...
+}
+```
+
+​	同样适合于类型化的集合
+
+```java
+public class MovieRecommender {
+
+    private Set<MovieCatalog> movieCatalogs;
+
+    @Autowired
+    public void setMovieCatalogs(Set<MovieCatalog> movieCatalogs) {
+        this.movieCatalogs = movieCatalogs;
+    }
+
+    // ...
+}	
+```
+
+​	对于集合目标Bean，可以实现`org.springframework.code.Ordered`接口，如果你想让数组或列表的项目以特定顺序排序，可以使用`@Order`或标准的`@Priority`注解，否则，它们的顺序将遵循容器中相应目标Bean定义的注册顺序。
+
+​	
+
+​	及时说类型化的`Map`实例也可以被自动注入，只要预计的key类型是String。`map`的值包含所有预期类型的Bean，而key包含相应的`Bean`名称
+
+```java
+	public class MovieRecommender {
+
+    private Map<String, MovieCatalog> movieCatalogs;
+
+    @Autowired
+    public void setMovieCatalogs(Map<String, MovieCatalog> movieCatalogs) {
+        this.movieCatalogs = movieCatalogs;
+    }
+
+    // ...
+}
+```
+
+​	默认情况下，当一个给定的注入点没有匹配的候选`Bean`可用时，自动注入就会失败。抛出异常。保证在声明的数组、`collection`或`map`的情况下，预计至少有一个匹配的元素
+
+​	但可以通过设置来改变这行为。通过将其标记为非必需（即通过`@Autowired`中的`required`属性设置为false），使框架能够跳入一个不可满足的注入点
+
+```java
+public class SimpleMovieLister {
+
+    private MovieFinder movieFinder;
+
+    @Autowired(required = false)
+    public void setMovieFinder(MovieFinder movieFinder) {
+        this.movieFinder = movieFinder;
+    }
+
+    // ...
+}
+```
+
+​	注入的构造函数和工厂方法参数是一种特殊情况。因为由于Spring的构造函数解析算法有可能处理多个构造函数，**所以`@Autowired`中的`required`属性有一些不同的含义**。构造函数和工厂方法参数实际上是默认需要的，但在单个构造函数的情况下有一些特殊的规则，比如**多元素注入点（数组、collection、map）如果没有匹配的bean，则被解析为空实例。这是允许的常见的实现模式**。即所有的依赖关系都可以在一个独特的多参数构造函数中声明——例如，声明为一个没有`@Autowired`注解的单一公共构造函数
+
+​	关于`@Autowired中的required`属性，有如下总结：
+
+1. 如果`required`属性的值为`true`，则只有一个构造函数可以使用`@Autowired`注解，不然会报错
+2. 如果有多个构造函数声明该注解，它们都必须声明`required=false`，才能被视为自动注入的后选择。
+   1. 当多个构造函数被声明该注解时，优先调用在容器中匹配到的bean数量更多的构造函数。
+   2. 如果没有候选者满足，将使用默认的构造函数。
+3. 如果一个类一开始只声明了一个构造函数，那么即使没有注解，它也会被调用。被注解的构造函数不一定是公共的（public）
+4. 构造器有多元素注入点时，如果没有匹配的Bean，注入空集合。	
+
+
+
+​	另外，你可以通过Java8的`java.util.Optional`来表达特定依赖的非必须性质：
+
+> Optional<T>是一种包装器对象，要么包装了类型T的对象，要么没有包装任何对象（为null），被当作一种更安全的使用对象的方式
+
+```java
+public class SimpleMovieLister {
+
+    @Autowired
+    public void setMovieFinder(Optional<MovieFinder> movieFinder) {
+        ...
+    }
+}
+```
+
+​	从Spring Framework5.0 开始，也可以使用`@Nullable`注解，来表达非必须性质
+
+```java
+public class SimpleMovieLister {
+
+    @Autowired
+    public void setMovieFinder(@Nullable MovieFinder movieFinder) {
+        ...
+    }
+}
+```
+
+​	
+
+
+
+​	你也可以对那些众所周知的可解析依赖的接口使用 `@Autowired`。`BeanFactory`、`ApplicationContext`、`Environment`、`ResourceLoader`、`ApplicationEventPublisher` 和 `MessageSource`。这些接口和它们的扩展接口，如 `ConfigurableApplicationContext` 或 `ResourcePatternResolver`，将被自动解析，不需要特别的设置。下面的例子是自动注入一个 `ApplicationContext` 对象。
+
+```java
+public class MovieRecommender {
+
+    @Autowired
+    private ApplicationContext context;
+
+    public MovieRecommender() {
+    }
+
+    // ...
+}
+```
+
+
+
+
+
+#### 2.9.2 用`@Primary`对基于注解的自动注入进行微调
+
+​	按类型自动注入可能会导致多个候选者，所以经常需要对选择过程进行更多的控制。实现这一目标的方法之一是使用Spring的`@Primary`注解。
+
+​	**`@Primary` 表示，当多个Bean是自动注入到一个单值（single value）依赖的候选者时，应该优先考虑一个特定的`Bean`。如果在候选者中正好有一个主要（primary）Bean存在，它就会成为自动注入的值。**
+
+​	考虑以下配置，它将`firstMovieCatalog`定义为主`MovieCatalog`。
+
+```java
+@Configuration
+public class MovieConfiguration {
+
+    @Bean
+    @Primary
+    public MovieCatalog firstMovieCatalog() { ... }
+
+    @Bean
+    public MovieCatalog secondMovieCatalog() { ... }
+
+    // ...
+}
+```
+
+​	通过前面的配置，Spring 会将 `firstMovieCatalog` 作为依赖注入到 `MovieRecommender`。
+
+```java
+public class MovieRecommender {
+    @Autowired
+    private MovieCatalog movieCatalog;
+
+    // ...
+}
+
+```
+
+
+
+
+
+#### 2.9.3 用Qualifiers微调基于注解的自动注入
+
+​	当可以确定一个主要的后选择时，`@Primary`是按类型使用自动状态的一种有效方式，有几个实例。当你需要对选择过程进行更多的控制时，**可以使用Spirng的`@Qualifier`注解。可以将限定符的值与特定的参数联系起来，缩小类型匹配的范围，从而为每个参数选择一个特定的Bean。在最简单的情况下，这可以是一个普通的描述性值**	
+
+```java
+public class MovieRoccomender{
+    @Autowired
+    @Qualifier("main")
+    private MovieCatelog movieCatelog;
+}
+```
+
+​	也可以在单个构造函数参数或方法参数上指定`@Qualifier`注解
+
+```java
+public class MovieRecommender {
+
+    private final MovieCatalog movieCatalog;
+
+    private final CustomerPreferenceDao customerPreferenceDao;
+
+    @Autowired
+    public void prepare(@Qualifier("main") MovieCatalog movieCatalog,
+            CustomerPreferenceDao customerPreferenceDao) {
+        this.movieCatalog = movieCatalog;
+        this.customerPreferenceDao = customerPreferenceDao;
+    }
+
+    // ...
+}
+
+
+```
+
+​	相应的Bean定义：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:annotation-config/>
+
+    <bean class="example.SimpleMovieCatalog">
+        <qualifier value="main"/> (1)
+
+        <!-- inject any dependencies required by this bean -->
+    </bean>
+
+    <bean class="example.SimpleMovieCatalog">
+        <qualifier value="action"/> (2)
+
+        <!-- inject any dependencies required by this bean -->
+    </bean>
+
+    <bean id="movieRecommender" class="example.MovieRecommender"/>
+
+</beans>
+
+```
+
+1. 具有`main qualifier`值的bean与具有相同`qualifier`值的构造函数参数相注入
+2. 具有`action qualifier`值的bean与具有相同`qualifier`值的构造函数参数相注入
+
+​	Bean的id被认为是默认的限定符值（`qualifier的值`），因此，可以用`main`的id来定义Bean，下面两种写法一样：
+
+```xml
+<bean class="SimpleMovieCatalog">
+    <qualifier value="main"/>
+</bean>
+
+<bean id="main"
+      class="SimpleMovieCatalog"/>
+```
+
+​	这会导致同样的匹配结果，但`@Autowired`从跟不上来说是关于类型驱动的注入，并带有可选的语义限定词，这意味着限定符的值，即使有Bean名称的回退（即上面那样，没有显示的`qualifier`，用`id`来充当限定符，就叫回退），也总是在类型匹配的集合具有缩小的语义，它们（限定符）在语义上并不表达对唯一Bean`id`的引用。
+
+​	好的限定符值是`main`或`EMEA`或`presistent`，表达来独立于`Bean id`的特定主键的特征。好的`Qualifier`是`narrowing(缩小范围)`的语义。
+
+​	`qualifier`也适用于类型化（泛型）的集合，例如，适用于`Set<MovieCatelog>`。在这种情况下，所有匹配的`bean`，根据声明的限定词，被作为一个集合注入。**这意味着限定词不一定是唯一的，相反，它们构成过滤标准。**例如，你可以用相同的限定词值`action`来定义多个`MovieCatalog`Bean。所有这些都被注入到一个用`@Qualifier("action")`注解的`Set<MovieCatalog>`中
+
+​	Tip：
+
+​	在类型匹配候选者中，让`qualifier`值针对目标Bean名称进行选择，不需要在注入点上进行`@Qualifier`注解。如果没有其他解析指标（如`qualifier或primary标记`）。对于非唯一的依赖情况，`Spring`会将注入点名称（即字段名或参数名）与目标Bean名称进行匹配，并选择同名的候选者。
+
+​	换句话说，如果自动注入的的参数名是：`actionCatalog`，那么类型匹配的候选者Bean中也有一个名字叫：`actionCatalog`的，而且没有其他注解，那么Bean`actioncatalog`就会被注入到参数中。
+
+
+
+
+
+​	对于那些本身被定义集合、map或数组类型的Bean，`@Resource`是一个很好的解决方案。它通过唯一的名称来引用特定的集合或数组Bean。
+
+​	从4.3版本开始，可以通过Spring的`@Autowired`类型匹配算法来匹配集合、Map和数组类型，只要在`@Bean`返回类型签名或集合继承层次中保留元素类型信息。在这种情况下，你可以使用`qualifier`值在相同类型的集合中进行选择。例如，下面的Java代码配置了一个集合Bean
+
+```java
+@Configuration
+public class AppConfig {
+
+    @Bean
+    @Qualifier("action")
+    public List<MovieCatalog> actionCatalogs() {
+        return List.of(
+                new ActionMovieCatalog(),
+                new ActionMovieCatalog()
+        );
+    }
+
+    @Bean
+    @Qualifier("comedy")
+    public List<MovieCatalog> comedyCatalogs() {
+        return List.of(
+                new ComedyMovieCatalog()
+        );
+    }
+}
+```
+
+​	现在，容器中有两个相同类型的集合，但限制服不同
+
+```java
+actionCatalogs
+    类型：List<MovieCatalog>
+    qualifier：action
+
+comedyCatalogs
+    类型：List<MovieCatalog>
+    qualifier：comedy
+```
+
+​	现在，POJO中有一个需要注入的对象，它被注解
+
+```java
+@Autowired
+@Qualifier("action")
+private List<MovieCatalog> catalogs;
+```
+
+​	Spring会在容器中寻找`List<MovieCatalog>` 找到两个Bean:`actionCatalogs、comedyCatalog`，然后根据`@Qualifiter("action")`去选择`actionCatalog`。
+
+​	为什么要保留元素类型信息，因为集合是支持泛型的，如果像这样返回`List`，那么Spring就不知道要匹配哪个了。所以，对于泛型，一定要把对于的类型写出来。
+
+​	`@Autowired`适用于字段、构造函数和多参数方法，允许在参数级别上通过`qualifier`注解来缩写范围。相比之下，@`Resource`只支持字段和只有一个参数Bean属性`setter`方法。因此，如果你的注入目标是构造函数或多参数方法，应该坚持使用`qualifier`。
+
+
+
+​	你可以创建你自己的自定义`qualifier`注解，以此来增强语义性。要做到这点，先定义一个注解，并在你的定义中提供`@Qualifier`注解。
+
+```java
+@Target({ElementType.FIELD, ElementType.PARAMETER})
+@Retention(RetentionPolicy.RUNTIME)
+@Qualifier
+public @interface Genre {
+    String value();
+}
+```
+
+​	然后你可以在自动注入的字段和参数上提供自定义`@qualifier`
+
+```java
+public class MovieRecommender {
+
+    @Autowired
+    @Genre("Action")
+    private MovieCatalog actionCatalog;
+
+    private MovieCatalog comedyCatalog;
+
+    @Autowired
+    public void setComedyCatalog(@Genre("Comedy") MovieCatalog comedyCatalog) {
+        this.comedyCatalog = comedyCatalog;
+    }
+
+    // ...
+}
+
+```
+
+​	接下来，你可以提供候选Bean定义的信息。你可以添加 `<qualifier/>` 标签作为 `<bean/>` 标签的子元素，然后指定 `type` 和 `value` 来匹配你的自定义qualifier注解。type是与注解的全限定类名相匹配的。另外，如果不存在名称冲突的风险，作为一种方便，你可以使用简短的类名
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd">
+
+    <context:annotation-config/>
+
+    <bean class="example.SimpleMovieCatalog">
+        <qualifier type="Genre" value="Action"/>
+        <!-- inject any dependencies required by this bean -->
+    </bean>
+
+    <bean class="example.SimpleMovieCatalog">
+        <qualifier type="example.Genre" value="Comedy"/>
+        <!-- inject any dependencies required by this bean -->
+    </bean>
+
+    <bean id="movieRecommender" class="example.MovieRecommender"/>
+
+</beans>
+
+```
+
+
+
+​	在某些情况下，使用没有值的注解可能就够了。例如，你可以提供一个`offline`目标，在没有互联网连接的情况下可以进行搜索，首先定义简单的注解。
+
+```java
+@Target({ElementType.FIELD, ElementType.PARAMETER})
+@Retention(RetentionPolicy.RUNTIME)
+@Qualifier
+public @interface Offline {
+}
+
+```
+
+​	然后将注解添加到要自动注入的字段或属性中
+
+```java
+public class MovieRecommender {
+
+    @Autowired
+    @Offline (1)
+    private MovieCatalog offlineCatalog;
+
+    // ...
+}
+```
+
+​	现在，Bean定义只需要一个`qualifier type`
+
+```xml
+<bean class="example.SimpleMovieCatalog">
+    <qualifier type="Offline"/> (1)
+    <!-- inject any dependencies required by this bean -->
+</bean>
+
+```
+
+​	
+
+#### 2.9.4 使用泛型作为自动注入`Qualifier`
+
+​	除了`@Qualifier`注解外，还可以使用`Java`泛型作为隐含的限定形式（即缩小候选者范围）。假设有如下配置
+
+```java
+@Configuration
+public class MyConfiguration {
+
+    @Bean
+    public StringStore stringStore() {
+        return new StringStore();
+    }
+
+    @Bean
+    public IntegerStore integerStore() {
+        return new IntegerStore();
+    }
+}
+```
+
+​	假设上面的Bean实现了一个泛型接口，（即`Store<String>`和`Store<Integer>`），可以`@Autowire Store`接口，泛型被作用`qualifier`。如下例所示
+
+```java
+@Autowired
+private Store<String> s1; // <String> qualifier, injects the stringStore bean
+
+@Autowired
+private Store<Integer> s2; // <Integer> qualifier, injects the integerStore bean
+
+```
+
+​	通过泛型来缩小候选者范围，而无需显示地声明`@Qualifier`注解。也可自动注入。
+
+​	泛型`qualifier`也适用于自动注入`list、Map`实例和数组，下面的例子是自动注入一个泛型`List`。
+
+```java
+// Inject all Store beans as long as they have an <Integer> generic
+// Store<String> beans will not appear in this list
+@Autowired
+private List<Store<Integer>> s;
+```
+
+
+
+
+
+#### 2.9.5 使用`CustomAutowireConfigurer`
+
+​	属于容器扩展知识，暂不学习
+
+
+
+#### 2.9.6 用`@Resource`注入
+
+​	Spring还支持通过在字段或Bean属性设置方法上使用`JSR-250 @Resource`注解进行注入。
+
+​	`@Resource`需要一个`name`属性。默认情况下，`Spring`将该值解释为要注入的`Bean`名称。换句话说，它遵循按名称的语义，例如：
+
+```java
+public class SimpleMovieLister {
+
+    private MovieFinder movieFinder;
+
+    @Resource(name="myMovieFinder") (1)
+    public void setMovieFinder(MovieFinder movieFinder) {
+        this.movieFinder = movieFinder;
+    }
+}
+
+```
+
+​	如果没有明确自动名字，默认的名字来着于字段名或`setter`方法。如果是一个字段，它采用字段名。如果是`setter`方法，则采用`Bean`属性名。下面的例子把名为`movieFinder`的bean注入它的`setter`方法中
+
+```java
+public class SimpleMovieLister {
+
+    private MovieFinder movieFinder;
+
+    @Resource
+    public void setMovieFinder(MovieFinder movieFinder) {
+        this.movieFinder = movieFinder;
+    }
+}
+
+```
+
+
+
+​	在没有明确指定名称的`@Resource`使用的特殊情况下，与`@Autowired`类似，**`@Resource`找到一个主要的类型匹配，而不是命名的bean，并解析总所周知的可解析的依赖：`BeanFactory`、`ApplicationContext`、 `ResourceLoader`、`ApplicationEventPublisher` 和 `MessageSource` 接口	**
+
+​	因此，在下面的例子中。`customerPreferenceDao`字段首先寻找名为`customerPreferenceDao`的Bean。找不到才回到`customerPreferenceDao`类型的唯一类型匹配
+
+```java
+public class MovieRecommender {
+
+    @Resource
+    private CustomerPreferenceDao customerPreferenceDao;
+
+    @Resource
+    private ApplicationContext context;(1)
+
+    public MovieRecommender() {
+    }
+    // ...
+}
+```
+
+`(1) context`字段是根据已知的可解析依赖类型注入的：`ApplicationContext`
