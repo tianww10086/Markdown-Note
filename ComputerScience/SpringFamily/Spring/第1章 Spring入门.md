@@ -3844,4 +3844,29 @@ ssfb.setMapperLocations(
 </dependency>
 ```
 
+​	然后在测试类上，注解@`withRun()`和`@ContextConfiguration`。如下
+
+```java
+@RunWith(SpringJUnit4ClassRunner.class)
+@ContextConfiguration(classes = SpringConfig.class)
+public class AccountServiceTest {
+    @Autowired
+    private AccountService accountService;
+
+    @Test
+    public void testFindById(){
+        System.out.println(accountService.findById(1));
+    }
+
+    @Test
+    public void TestFindAll(){
+        System.out.println(accountService.findAll());
+    }
+}
+
+```
+
+​	然后想要测试哪个方法，就在哪个方法上写@Test
+
 ​	
+
