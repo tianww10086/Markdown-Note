@@ -584,28 +584,33 @@ $ java -jar myapp.jar --spring.application.json='{"my":{"name":"test"}}'
 
    1. classpath根路径
    2. classpath下的`/config`包
-
 2. 当前目录
 
    1. 当前目录下
-
    2. 当前目录下的`/config`子目录
-
    3. `config/`子目录的直接子目录
 
-      
+​	列表按优先级排序（较低项目的值覆盖较早项目的值，意思是`classpath`根路径先被添加，后被添加的当前目录下`config`子目录会覆盖掉前面的值）。
 
-      ​	列表按优先级排序（较低项目的值覆盖较早项目的值，意思是`classpath`根路径先被添加，后被添加的当前目录下`config`子目录会覆盖掉前面的值）。
 
-      
 
-      
 
-      
 
-      
+## 6.2.5 使用YAML
 
-      
+​	YAML是JSON的超集，因此是指定分层配置数据的方便格式。只要你的`classpath`上有`SnakeYAML`库。`SpringApplication`类就会自动支持YAML作为`properties`的替代品
 
-      
+​	
+
+
+
+
+
+
+
+
+
+
+
+
 

@@ -183,6 +183,150 @@
 
 
 
+#### **程序案例**：
+
+​	xml的配置文件如下，该配置文件做了如下工作：
+
+- 包扫描起别名（该别名默认为类名），这样在mapper映射文件中就不用使用全限定名
+- 配置环境：
+  - driver：8.0以上版本的路径为：com.mysql.cj.jdbc.Driver
+  - url："jdbc:mysql://127.0.0.1:3306/sakila"表示连接本地的`sakila`数据库。`&`符号要用`&amp`代替，后面这一串是连接时的设置
+  - username：配置用户名为root
+  - password：密码为123456
+- <\mappers\>: 用来配置执行语句的mapper.xml文件，有使用`resource`指定路径包含一个xml文件和使用包扫描下所有xml文件的方法。
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+
+    <!-- 该包下的类自动起别名：默认为类名，在映射文件中就不用写全限定名了-->
+    <typeAliases>
+        <package name="com.tww.pojo"/>
+    </typeAliases>
+
+    <environments default="mysql">
+        <environment id="mysql">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.cj.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://127.0.0.1:3306/sakila?useUnicode=true&amp;characterEncoding=utf-8&amp;serverTimezone=Asia/Shanghai&amp;allowPublicKeyRetrieval=true"/>
+                <property name="username" value="root"/>
+                <property name="password" value="123456"/>
+            </dataSource>
+        </environment>
+    </environments>
+    
+    <mappers>
+        <!-- 扫描该包下的映射文件-->
+        <package name="com.tww.mapper"/>
+    </mappers>
+</configuration>
+```
+
+​	在该例子中，我们查询actor表的全部数据。所以，ActorMapper.xml文件内容如下：
+
+```xml
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!-- namespace :命名空间  -->
+<mapper namespace="com.tww.mapper.ActorMapper">
+    <select id ="selectAll" resultType="Actor">
+        select * from actor;
+    </select>
+
+    <select id = "FindById" parameterType="int" resultType="Actor" >
+        select * from actor where actor_id =#{id}
+    </select>
+</mapper>
+```
+
+​	注意，该文件的位置要与接口的位置对应，如果Mapper接口的位置在：`com.tww.mapper`的路径下面，那么Mapper.xml文件则需要在`resources/com/tww/mapper`路径下。这样编译后，就能保证Mapper接口和Mapper.xml文件在同一文件夹	
+
+​	对应的接口程序：
+
+```java
+package com.tww.mapper;
+
+import com.tww.pojo.Actor;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
+
+public interface ActorMapper {
+    List<Actor> selectAll();
+
+    Actor FindById(@Param("id") int id);
+}
+
+```
+
+​	运行程序：
+
+```java
+import com.tww.mapper.ActorMapper;
+import com.tww.pojo.Actor;
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+public class Main {
+    public static void main(String[] args) throws IOException {
+        String resource = "mybatis-config.xml";
+        InputStream inputStream = Resources.getResourceAsStream(resource);
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream); //获取Session工厂
+
+        SqlSession sqlsession = sqlSessionFactory.openSession();
+
+        ActorMapper mapper=  sqlsession.getMapper(ActorMapper.class);
+        List<Actor> actorList =  mapper.selectAll();
+        actorList.forEach(System.out::println);
+        System.out.println("查询id为150的演员信息："+mapper.FindById(150));
+
+    }
+}
+
+```
+
+​	pom文件坐标：
+
+```xml
+
+    <dependency>
+      <groupId>org.mybatis</groupId>
+      <artifactId>mybatis</artifactId>
+      <version>3.5.16</version> <!-- 请使用最新稳定版 -->
+    </dependency>
+
+
+    <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
+      <version>8.4.0</version>
+    </dependency>
+  </dependencies>
+```
+
+​	这表示运行Mybatis框架需要导入数据库的依赖
+
+
+
+
+
+
+
+
+
 ## 8.4 MyBatis核心配置文件详解
 
 ​	什么是`MyBatis`核心配置文件，其实就是`mybatis-config.xml`文件，可以通过配置里面的各项属性去影响MyBatis的行为
