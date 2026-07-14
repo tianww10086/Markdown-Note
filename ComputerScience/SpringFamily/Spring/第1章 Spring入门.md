@@ -3508,4 +3508,340 @@ public class AppConfig {
 
 ​	`ClientDao()`被调用了两次，由于该方法创建了一个`CilentDaoImpl`实例并将其返回，你通常会期望有两个实例（每个服务都有一个）。这肯定是有问题的：**在Spring中，实例化的Bean默认有一个`singleton scope`，所有的`@Configuration`类都是在启动时用`CGLIB`子类化的，在子类中，子方法首先检查容器中是否有任何缓存（scope）的Bean，然后再调用父方法并创建一个新实例**
 
+
+
+
+
+
+
+## 2.13 Spring整合其他框架
+
+​	在使用其他框架的时候，有很多参数是在xml文件中写死的，这样很不方便。我们可以把参数写在`properties`文件中。然后让xml文件去读取它。现在假设有一个`.properties`文件。
+
+```properties
+jdbc.driver =com.mysql.jdbc.Driver;
+jdbc.url = jdbc:mysql://localhost:3306/sakila
+jdbc.username =root
+jdbc.password = 123456
+```
+
+​	我们需要对`xml`配置文件进行改造。开启命名空间context，这是原先没有开启context命名空间时
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd">
+</beans>
+```
+
+​	开启后：
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd"
+    >
+</beans>
+
+```
+
+​	然后使用命名空间，加载指定的`properties`文件
+
+```xml
+<context:property-placeholder location="jdbc.properties"/>
+```
+
+​	最后使用`${}`读取加载的属性值，下面是整个改造后的xml文件，从`properties`文件中读取属性
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd"
+    >
+
+    <context:property-placeholder location="jdbc.properties"/>
+
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource">
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="url" value="${jdbc.url}" />
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+</beans>
+
+```
+
+​	推荐加载`properties`时这样加载：
+
+```xml
+<context:property-placeholder location="classpath* :*.properties" system-properties-mode="NEVER"/>
+```
+
+​	`location=classpath:*.properties`意思是加载类路径下的所有properties文件，`system-properties-mode=NEVER`表示不加载系统配置属性。可以避免冲突
+
+
+
+​	我们最经常使用的还是使用注解开发的配置类，如`@Configuration`，如果想要让配置类读取到`properties`文件的信息，可以这样做。
+
+1. 注解`@PropertySource(value = "classpath:*.properties" encoding="UTF-8")`
+
+2. 使用`@Value("${}")`注入其值。
+
+3. 创建`PropertySourcesPlaceholderConfigurer`Bean，该bean必须是static的。用来保证任何`${}`占位符无法解析的情况下Spring初始化失败
+
+   例子如下：
+
+```java
+@Configuration
+@ComponentScan("com.tww")
+@PropertySource(value = "classpath:jdbc.properties",encoding = "UTF-8")
+public class ConfigApp {
+
+    @Value("${jdbc.driver}")
+    private  String driver;
+
+    @Value("${jdbc.url}")
+    private  String url;
+
+    @Value("${jdbc.username}")
+    private  String username;
+
+    @Value("${jdbc.password}")
+    private  String password;
+
+    @Bean
+    public static PropertySourcesPlaceholderConfigurer propertyConfigurer() {
+        return new PropertySourcesPlaceholderConfigurer();
+    }
+
+    @Bean
+    public Person person() {
+        return new Person("田韦韦",18);
+    }
+
+    @Bean
+    public DruidDataSource dataSource() {
+        DruidDataSource dataSource = new DruidDataSource();
+        dataSource.setDriverClassName(driver);
+        dataSource.setUrl(url);
+        dataSource.setUsername(username);
+        dataSource.setPassword(password);
+        return dataSource;
+    }
+
+    @Bean
+    @Qualifier("c3p0")
+    public ComboPooledDataSource c3p0DataSource() throws PropertyVetoException {
+        ComboPooledDataSource dataSource = new ComboPooledDataSource();
+        dataSource.setDriverClass("com.mysql.jdbc.Driver");
+        dataSource.setJdbcUrl("jdbc:mysql://localhost:3306/sakila");
+        dataSource.setUser("root");
+        dataSource.setPassword("123456");
+        dataSource.setMaxPoolSize(1000);
+        return dataSource;
+    }
+}
+
+```
+
+​	注意， 被`@Value`注解的变量不能是static
+
+​	
+
+
+
+### 2.13.1 Spring整合mybatis
+
+​	mybatis是一个持久层的框架，能够大大减少常规JDBC开发的代码，优化了开发的速度和质量。
+
+​	Spring整合mybatis时，除了需要导入mybatis主题和mysql之外，还需要导入一个Spring操作数据库的包。依赖坐标如下：
+
+```xml	
+<!-- Source: https://mvnrepository.com/artifact/org.springframework/spring-jdbc -->
+<dependency>
+    <groupId>org.springframework</groupId>
+    <artifactId>spring-jdbc</artifactId>
+    <version>6.2.18</version>
+    <scope>compile</scope>
+</dependency>
+```
+
+​	和Spring整合Mybatis的一个jar包
+
+```xml	
+   <!-- MyBatis 与 Spring 的整合桥接 -->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis-spring</artifactId>
+            <version>3.0.4</version>  <!-- 配合 MyBatis 3.5.x 和 Spring 6.x 使用 -->
+        </dependency>
+```
+
+​	
+
+​	Mybatis的配置可以分为几大块
+
+1. 外部数据源的引入
+
+```xml	
+<properties resource = "jdbc.properties"></properties>
+```
+
+2. 包扫描起别名
+
+```xml	
+<typeAliases>
+	<package name="..."></package>
+</typeAliases>
+```
+
+3. 配置数据源
+
+​	这几大块，我们都可以使用Java代码代替，外部数据源在配置类的注解中使用`@PropertySource`代替。如下：
+
+```java
+@Configuration
+@ComponentScan("com.tww")
+@PropertySource("classpath:jdbc.properties")
+@Import({jdbcConfig.class,MybatisConfig.class})
+public class SpringConfig {
+}
+```
+
+​	不仅如此，还做了一些其他工作，如扫描com.tww包下的bean，引入其他的配置类。@PropertySource("classpath:jdbc.properties")注解使外部数据源的信息注册进了`Environment`，所以该包下的所有bean都可以使用它的信息
+
+​	现在，我们对`jdbc`的连接池做配置：
+
+```java
+public class jdbcConfig {
+
+    @Value("${jdbc.driver}")
+    private String driver;
+    @Value("${jdbc.url}")
+    private String url;
+    @Value("${jdbc.username}")
+    private String username;
+    @Value("${jdbc.password}")
+    private String password;
+
+
+
+    @Bean
+    public DataSource dataSource() {
+        DruidDataSource ds = new DruidDataSource();
+        ds.setDriverClassName(driver);
+        ds.setUrl(url);
+        ds.setUsername(username);
+        ds.setPassword(password);
+        return ds;
+    }
+}
+
+```
+
+​	该`DataSource`注册为了Bean，被Spring所管理，在之后需要该数据源的地方，使用`@Autowire`自动注入就可以。
+
+​	现在，来到了整合的关键部分，我们创建一个类`mybatisCofig`对该部分做处理。
+
+```java
+public class MybatisConfig {
+
+    @Bean
+    public SqlSessionFactoryBean sqlSessionFactory(@Autowired DataSource dataSource) {
+        SqlSessionFactoryBean ssfb = new SqlSessionFactoryBean();
+        ssfb.setTypeAliasesPackage("com.tww.domain"); //扫描包起别名
+        ssfb.setDataSource(dataSource); //配置数据源
+        return ssfb;
+    }
+
+    @Bean
+    public MapperScannerConfigurer getMapperScannerConfigurer() {
+        MapperScannerConfigurer msc = new MapperScannerConfigurer();
+        msc.setBasePackage("com.tww.dao");
+        return msc;
+    }
+}
+```
+
+​	在第一个Bean中，`SqlSessionFactoryBean`是mybatis专门为Spring提供的整合类，简化了配置流程，`setTypeAliasesPackage()`起别名。`setDataSource(dataSource)`配置数据域，特别注意，dataSource是由`Autowired`自动注入的。
+
+​	第二个Bean中。使用`msc.setBasePackage()`扫描对应的数据层接口，也就是映射对象。总之，整合的三个步骤：
+
+1. 包扫描普通对象
+2. 配置数据源
+3. MapperScannerConfigurer对象扫描数据层接口
+
+​	下面是对应的数据层接口`AccountDao`
+
+```java
+package com.tww.dao;
+@Component
+public interface AccountDao {
+
+    @Insert("insert into account(name, balance) values(#{name}, #{balance})")
+    void save(Account account);
+
+    @Update("update account set name = #{name}, balance = #{balance} where id = #{id}")
+    void update(Account account);
+
+    @Delete("delete from account where id = #{id}")
+    void delete(Integer id);
+
+    @Select("select * from account where id = #{id}")
+    Account findById(Integer id);
+
+    @Select("select * from account")
+    List<Account> findAll();
+}
+```
+
+​	但是对于复杂的sql语句，还是应该回到XML文件来进行开发。只需要在sqlSessionFactory Bean中额外添加一句：
+
+```java
+ssfb.setMapperLocations(
+	new PathMatchingResourcePatternResolver().getResource("classpath:mapper/*.xml")
+)
+```
+
+​	这样，复杂的sql语句就可以在xml中编写了。
+
+
+
+​	
+
+### 2.14 Spring整合Junit
+
+​	第一步，先导入需要的依赖坐标，首先是Junit本体：
+
+```xml
+ <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.1</version>
+            <scope>test</scope>
+</dependency>
+```
+
+​	然后是Spring的test
+
+```xml
+<dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-test</artifactId>
+            <version>7.0.8</version>
+</dependency>
+```
+
 ​	
