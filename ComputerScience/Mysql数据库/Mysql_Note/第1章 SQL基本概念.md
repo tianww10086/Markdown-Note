@@ -602,7 +602,7 @@ UPDATE 表名 SET 字段名1=值1, 字段名2 = 值2, ... [WHERE 条件];
 UPDATE student SET id=4 WHERE name='李四';
 ```
 
-
+ 
 
 2. **删除数据**
 

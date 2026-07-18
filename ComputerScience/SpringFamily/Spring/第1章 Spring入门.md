@@ -2722,7 +2722,7 @@ catalog.name=MovieCatalog
 
 ​	在这种情况下`catalog.name`参数和字段将等于`MovieCatalog`值
 
-​	Spring提供了一个默认的款式的嵌入式值解析器。它将尝试解析属性值，如果无法解析，属性名称（例如`${catalog.name}`）将被注入作为值。
+d	Spring提供了一个默认的款式的嵌入式值解析器。它将尝试解析属性值，如果无法解析，属性名称（例如`${catalog.name}`）将被注入作为值。
 
 ​	**如果你想对不存在的值保存严格的控制，应该在配置类里声明一个`PropertySourcesPlaceholderConfigurer` Bean**
 
@@ -2747,6 +2747,66 @@ public class AppConfig {
 ​	Spring提供的内置转换器支持允许自动处理简单的类型转化（例如转化为`Integer`或`int`）。多个逗号分隔的值可以自动转化为`String`数组。
 
 ​	
+
+
+
+#### 2.9.8 `@Service`
+
+​	该注解用于业务层，本质上和`@Component`没有区别， 只是语义更加明确，表明：
+
+| 这是业务层组件
+
+​	下面是该注解源码：
+
+```java
+@Target({ElementType.TYPE}) //表示该注解只能用于类、接口和枚举上
+@Retention(RetentionPolicy.RUNTIME) // 表示该注解会一直保留到程序运行时
+@Documented
+@Component
+public @interface Service {
+    @AliasFor(
+        annotation = Component.class
+    )
+    String value() default "";
+}
+
+```
+
+
+
+
+
+#### 2.9.8 `@Repository`
+
+​	常用于数据层接口`DAO`
+
+```java
+@Repository
+public class AccountDaoImpl{
+    ...
+}
+```
+
+​	它可以自动将SQL异常转换为Spring框架下的异常，假如报`SQLException`，它可以转换为`DataAccessException`异常
+
+
+
+
+
+#### 2.9.9 `@Controller`
+
+​	常用语Spring MVC 控制层
+
+```java
+@Controller
+public class UserController{
+    ...
+}
+```
+
+​	
+
+
 
 
 
@@ -3662,7 +3722,7 @@ public class ConfigApp {
 
 
 
-### 2.13.1 Spring整合mybatis
+#### 2.13.1 Spring整合mybatis
 
 ​	mybatis是一个持久层的框架，能够大大减少常规JDBC开发的代码，优化了开发的速度和质量。
 
@@ -3821,7 +3881,7 @@ ssfb.setMapperLocations(
 
 ​	
 
-### 2.14 Spring整合Junit
+#### 2.14 Spring整合Junit
 
 ​	第一步，先导入需要的依赖坐标，首先是Junit本体：
 
@@ -3870,3 +3930,147 @@ public class AccountServiceTest {
 
 ​	
 
+
+
+
+
+## 2.14 Spring事务
+
+​	事务的作用，在数据层是保障一些系列的数据库操作同时成功或同时失败。
+
+​	而Spring事务的作用：在数据层或**业务层**保障一系列的数据库操作同时成功和同时失败。因为业务层会大量的接触到数据层的接口，所以给业务层提供事务支持也是很重要的
+
+​	Spring提供`PlatformTranscationManager`来进行事务的一些操作，如提交、回滚等等….
+
+```java
+public interface PlatformTranscationManager{
+    void commit(TranscationStatus status) throw TrasncationException;
+    
+   	void rollback(TranscationStatus status) throw TrasncationException;
+}
+```
+
+​	怎么开启事务？在你要加事务的方法上加上注解`@Transactional`。一般写在实现类的接口上。
+
+​	第二部，到我们的配置包中，去创建一个事务管理器bean。由于该管理器是对数据事务性做统一，所以在jdbcConfig中写
+
+```java
+    @Bean
+    public PlatformTransactionManager transactionManager(DataSource dataSource){
+        //DataSourceTransactionManager 是JDBC的事务管理
+        DataSourceTransactionManager transactionManager = new DataSourceTransactionManager();
+        transactionManager.setDataSource(dataSource);
+        return transactionManager;
+    }
+```
+
+​	第四步，到Spring配置类中加入注解`@EnableTransactionManagement`,告诉Spring是用注解标注的事务
+
+​	现在，被事务管理的方法就只会同时成功和同时失败。
+
+​	例如，在`AccountService`接口中，有转账方法`transfer`，我们为它加上注解`@Transcational`。
+
+```java
+    @Transactional
+    void transfer(String out , String in , BigDecimal money);
+```
+
+​	它的实现类`AccoutServiceImpl`中是这样写的
+
+```java
+    public void transfer(String out , String in , BigDecimal money){
+        //先查找两个人的id
+        Integer out_id = accountDao.findByNameReturnId(out);
+        Integer in_id = accountDao.findByNameReturnId(in);
+
+        if(out_id==null||in_id==null){
+            throw new RuntimeException("账户不存在");
+        }
+
+        //先减少出钱账户的钱
+        accountDao.outBalance(money,out_id);
+        int i =1/0;
+        //再增加进钱账户的钱
+        accountDao.inBalance(money,in_id);
+
+    }
+```
+
+​	如果没有事务管理，那么执行到`i=1/0`报出异常，前面账户的钱已经被扣除了，然而对应账户的钱却没有增加，这是一个很大的问题。使用事务管理后，要么执行成功，要么执行失败。执行失败后，就会回到执行前的状态。
+
+​	`Spring`注解式事务通常添加在**业务层接口**中而不会添加到业务层实现类中，降低耦合。
+
+​	注解式事务可以添加到业务方法上表示当前方法开启事务，也可以添加到接口上表示当前接口所有方法开启事务。
+
+
+
+
+
+#### 2.14.1 事务角色
+
+​	事务管理员：发起事务方，在Spring中通常指代业务层开启事务的方法
+
+​	事务协调员：加入事务方，在Spring中通常指代数据层方法，也可以是业务层方法
+
+​	
+
+
+
+
+
+#### 2.14.2 事务属性
+
+​	![image-20260716202819926](../IMG/image-20260716202819926.png)
+
+​	Spring事务默认只处理`Error`和`RuntimeException`类的异常，遇到`IOException`类的异常不会滚，如果想要遇到该类异常让事务回滚，则使用`rollbackFor` ，在其注解中的属性添加
+
+```java
+    @Transactional(rollbackFor = {IOException.class})
+    void transfer(String out , String in , BigDecimal money) throws IOException;
+```
+
+​	`rollbackForClassName` 只是将格式换成了字符串。如下同样生效。而`noRollBackFor`属性则是表示指定遇到哪些异常并不会回滚
+
+```java
+@Transactional(
+    rollbackForClassName = {"IOException"}
+)
+```
+
+
+
+​	`readOnly`: 是否是只读事务：
+
+```java
+@Transcational(readOnly=true)
+```
+
+​	告诉Spring和底层数据库：这个事务只进行查询操作，不会修改数据。相对于普通事务，在性能上有优化。
+
+​	`timeout`: 事务超时时间
+
+```java
+@Transcational(timeout = 10) //单位秒
+```
+
+​	表示一个事务执行超过10秒，Spring会认为事务失败，并进行回滚。
+
+​	
+
+​	`propagation`:该属性用来控制，**当一个事务方法调用另一个事务方法时，事务应该如何传播**。行为方式如下：
+
+1. `REQUIRED(默认)`：有事务就加入，没有事务就创建。
+2. `REQUIRES_NEW`: 无论有没有事务，都创建一个新的事务
+3. `SUPPORTS`:有事务就加入，没有事务就非事务执行
+
+![image-20260716212230992](../IMG/image-20260716212230992.png)
+
+
+
+ 
+
+​		
+
+​	
+
+​	
