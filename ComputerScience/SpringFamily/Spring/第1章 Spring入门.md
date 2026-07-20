@@ -3716,7 +3716,17 @@ public class ConfigApp {
 
 ```
 
-​	注意， 被`@Value`注解的变量不能是static
+​	注意， 被`@Value`注解的变量不能是static。注意数据源`DruidDataSource`需要导入额外的坐标。
+
+```xml
+<dependency>
+    <groupId>com.alibaba</groupId>
+    <artifactId>druid</artifactId>
+    <version>1.2.23</version>
+</dependency>
+```
+
+​	
 
 ​	
 
@@ -3726,7 +3736,7 @@ public class ConfigApp {
 
 ​	mybatis是一个持久层的框架，能够大大减少常规JDBC开发的代码，优化了开发的速度和质量。
 
-​	Spring整合mybatis时，除了需要导入mybatis主题和mysql之外，还需要导入一个Spring操作数据库的包。依赖坐标如下：
+​	Spring整合mybatis时，除了需要导入mybatis主体和mysql之外，还需要导入一个Spring操作数据库的包。依赖坐标如下：
 
 ```xml	
 <!-- Source: https://mvnrepository.com/artifact/org.springframework/spring-jdbc -->
@@ -3785,6 +3795,7 @@ public class SpringConfig {
 ​	现在，我们对`jdbc`的连接池做配置：
 
 ```java
+@Configuration
 public class jdbcConfig {
 
     @Value("${jdbc.driver}")
@@ -3816,6 +3827,7 @@ public class jdbcConfig {
 ​	现在，来到了整合的关键部分，我们创建一个类`mybatisCofig`对该部分做处理。
 
 ```java
+@Configuration
 public class MybatisConfig {
 
     @Bean
@@ -3877,7 +3889,22 @@ ssfb.setMapperLocations(
 
 ​	这样，复杂的sql语句就可以在xml中编写了。
 
+​	下面是mysql和mybaits本体的坐标 
 
+```xml
+   <dependency>
+      <groupId>com.mysql</groupId>
+      <artifactId>mysql-connector-j</artifactId>
+      <version>9.3.0</version>
+    </dependency>
+
+	<!-- MyBatis本体 -->
+    <dependency>
+      <groupId>org.mybatis</groupId>
+      <artifactId>mybatis</artifactId>
+      <version>3.5.19</version>
+    </dependency>
+```
 
 ​	
 
@@ -3909,7 +3936,7 @@ ssfb.setMapperLocations(
 ```java
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = SpringConfig.class)
-public class AccountServiceTest {
+public class AccountServiceTest{
     @Autowired
     private AccountService accountService;
 
