@@ -3979,7 +3979,7 @@ public interface PlatformTranscationManager{
 
 ​	怎么开启事务？在你要加事务的方法上加上注解`@Transactional`。一般写在实现类的接口上。
 
-​	第二部，到我们的配置包中，去创建一个事务管理器bean。由于该管理器是对数据事务性做统一，所以在jdbcConfig中写
+​	第二步，到我们的配置包中，去创建一个事务管理器bean。由于该管理器是对数据事务性做统一，所以在jdbcConfig中写
 
 ```java
     @Bean

@@ -6,10 +6,6 @@
 
 
 
-
-
-
-
 ### 3.1.1 SpringMVC入门案例
 
 ​	1.创建SpringMVC控制器类（等同于`Servlet`功能）
@@ -748,3 +744,342 @@ DELETE localhost/user/100
 ​	则会将100绑定到delete方法的形参id上。
 
 ​	
+
+
+
+
+
+## 3.3 SSM整合
+
+ 	所谓SSM技术是指：Spring+SpringMVC+Mybatis三个技术框架整合到一起进行开发。具体所需依赖列表如下：
+
+![image-20260722103659497](../IMG/image-20260722103659497.png)
+
+​	对应pom.xml文件
+
+```xml
+<dependencies>
+    <!-- Spring Web MVC -->
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-webmvc</artifactId>
+        <version>5.2.10.RELEASE</version>
+    </dependency>
+
+    <!-- Spring JDBC -->
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-jdbc</artifactId>
+        <version>5.2.10.RELEASE</version>
+    </dependency>
+
+    <!-- Spring 测试框架 (scope 为 test) -->
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-test</artifactId>
+        <version>5.2.10.RELEASE</version>
+        <scope>test</scope>
+    </dependency>
+
+    <!-- MyBatis 核心 -->
+    <dependency>
+        <groupId>org.mybatis</groupId>
+        <artifactId>mybatis</artifactId>
+        <version>3.5.6</version>
+    </dependency>
+
+    <!-- MyBatis 与 Spring 整合包 -->
+    <dependency>
+        <groupId>org.mybatis</groupId>
+        <artifactId>mybatis-spring</artifactId>
+        <version>1.3.0</version>
+    </dependency>
+
+    <!-- MySQL 驱动 -->
+    <dependency>
+        <groupId>mysql</groupId>
+        <artifactId>mysql-connector-java</artifactId>
+        <version>5.1.47</version>
+    </dependency>
+
+    <!-- 阿里 Druid 连接池 -->
+    <dependency>
+        <groupId>com.alibaba</groupId>
+        <artifactId>druid</artifactId>
+        <version>1.1.16</version>
+    </dependency>
+
+    <!-- JUnit 单元测试 (scope 为 test) -->
+    <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>4.12</version>
+        <scope>test</scope>
+    </dependency>
+
+    <!-- Servlet API (scope 为 provided，因为 Tomcat 容器自带) -->
+    <dependency>
+        <groupId>javax.servlet</groupId>
+        <artifactId>javax.servlet-api</artifactId>
+        <version>3.1.0</version>
+        <scope>provided</scope>
+    </dependency>
+
+    <!-- Jackson 数据绑定 (用于 JSON 转换) -->
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.9.0</version>
+    </dependency>
+</dependencies>
+```
+
+​	
+
+​	对于返回给前端的数据，我们一般会定义具体的格式，如下类：
+
+```java
+public class Result {
+    private Object data; //数据
+
+    private Integer code; //状态码
+
+    private String msg; //消息
+}
+```
+
+​	使用方式如下：
+
+```java
+    @PostMapping //新增一本书
+    public Result save(@RequestBody Book book){
+         boolean flag = bookService.addBook(book);
+
+         return new Result(flag?Code.SAVE_OK:Code.SAVE_ERR,flag);
+    }
+
+    @GetMapping //获取所有书籍
+    public Result getAll(){
+      List<Book> books= bookService.selectAll();
+      Integer code = books!=null?Code.GET_OK:Code.GET_ERR;
+      String msg = books!=null?"null":"查询数据失败";
+      
+      return new Result(books,msg,code);
+    }
+```
+
+​	前端请求这样的方法后，获取的Json格式都是统一的。
+
+```json
+{
+    "data": {
+        "id": 2,
+        "bookName": "深入理解Java虚拟机",
+        "price": 99.00,
+        "publisher": "机械工业出版社",
+        "writer": "周志明"
+    },
+    "code": 20041,
+    "msg": "null"
+}
+```
+
+​	
+
+### 3.3.1 异常处理器
+
+​	对于一些可能抛出异常的方法来说，需要进行处理。出现异常现象的常见位置和原因如下：
+
+- 框架内部抛出的异常：因使用不合规导致
+- 数据层抛出的异常：外部服务器故障导致（例如，服务器访问超时）
+- 业务层抛出的异常：因业务逻辑书写错误导致
+- 表现层抛出的异常：因数据收集、校验等规则导致（例如，不匹配的数据类型间导致异常）
+- 工具类抛出的异常：因工具类书写不够严谨和健壮导致。
+
+​	例：
+
+```java
+@RestControllerAdvice
+public class ProjectExceptionAdvice {
+
+    @ExceptionHandler({SystemException.class})
+    public Result doSystemException(SystemException ex){
+        //记录日志
+        //发送消息给运维
+        //发送邮件给开发人员，ex对象发送给开发人员
+        return new Result(ex.getMessage(),null,ex.getCode());
+    }
+
+
+
+    @ExceptionHandler(Exception.class)
+    public Result doException(Exception ex){
+        System.out.print("异常已拦截");
+        return new Result(Code.SYSTEM_TIMEOUT_ERR,"系统繁忙，请稍后再试");
+
+    }
+}
+```
+
+​	在正常情况下，`Controller`方法抛出异常，会返回错误响应，即500状态码。现在通过`@Controller`和`@ControllerAdvice`类可以有`@ExceptionHandler`方法处理来着`controller`方法的异常。
+
+​	`@ControllerAdvice`用于全局异常处理，配合`@ExceptionHandler`，捕获整个应用中所有`@Controller`抛出的特定异常。
+
+​	而`@RestControllerAdvice`由`@ControllerAdvice`+`ResponseBody`注解组成，专门为`RESTful API`（前后端分离）场景设计，使用它时，所有`@ExceptionHandler`方法返回数据会自动通过`HttpMessageConverter`转换为JSON格式，直接写入响应体。
+
+​	`@ExceptionHanlder`注解可以声明要处理的异常类型，从而达到精细度控制。
+
+
+
+## 3.4 拦截器
+
+​	拦截器（`Interceptor`）是一种动态拦截方法调用的机制，在SpringMVC中动态拦截控制器方法的执行
+
+​	![image-20260723130531974](../IMG/image-20260723130531974.png)
+
+作用如下：
+
+- 它可以在指定的方法调用前后执行预先设定的代码
+- 阻止原始方法的执行
+
+可以看到，拦截器和过滤器的概念很相似，下面给出它们的区别：
+
+- 归属不同：`Filter`属于`Servlet`技术，`Interceptor`属于`SpringMVC`技术
+- 归属内容不同：`Filter`对所有访问进行增强，`Interceptor`仅针对`SpringMVC`的访问进行增强
+
+
+
+
+
+
+
+### 3.4.1 入门案例
+
+​	制作拦截器功能类
+
+```java
+package com.tww.controller.interceptor;
+
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+
+@Component
+public class ProjectInterceptor implements HandlerInterceptor {
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+        System.out.println("afterCompletion.....");
+        HandlerInterceptor.super.afterCompletion(request, response, handler, ex);
+    }
+
+    @Override
+    public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+        System.out.println("postHandle...");
+        HandlerInterceptor.super.postHandle(request, response, handler, modelAndView);
+    }
+
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        System.out.println("preHandle...");
+        return true;
+    }
+}
+
+```
+
+​	 第二步，创建一个支持类实现`WebMvcConfigurer`，然后使他在SpringMvcConfig容器中
+
+```java
+public class SpringMvcSupport implements WebMvcConfigurer {
+    //拦截器
+    @Autowired
+    private ProjectInterceptor projectInterceptor;
+
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/pages/**").addResourceLocations("/pages/");
+    }
+
+    //当前端请求books下的任意路径时，使用拦截器拦截
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(projectInterceptor).addPathPatterns("/books/**");
+    }
+}
+
+```
+
+​	我们在servlet容器中，使用`@Import`导入这个类，使他注册为bean即可生效
+
+```java
+@Configuration
+@ComponentScan("com.tww.controller")
+@EnableWebMvc
+@Import(SpringMvcSupport.class)
+public class SpringMvcConfig {
+
+    //视图解析器
+    @Bean
+    public ViewResolver jspViewResolver() {
+        InternalResourceViewResolver resolver = new InternalResourceViewResolver();
+        resolver.setPrefix("/WEB-INF/views/");
+        resolver.setSuffix(".jsp");
+        resolver.setOrder(1);
+        return resolver;
+    }
+
+}
+```
+
+​	这样，我们就能处理方法的前后去做一些拦截。我们关注其中`preHandle`。
+
+```java
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        System.out.println("preHandle...");
+        return true;
+    }
+```
+
+​	返回值`boolean`决定这个拦截器会不会执行请求的方法，如果是`false`，则不会执行，如果是`true`，则执行。`preHandle`适合做权限认证，登录管理等拦截操作，在执行请求方法前，先拦截http的请求，如果拥有权限，才执行。
+
+​	`HttpServletRequest`负责接收请求，`HttpServletResponse`负责向客户端返回数据。
+
+​	当拦截器有多个时， 只有全部preHandel方法都返回true，才会放行（表示当前拦截器同意请求继续执行）
+
+​	`handler`通常都是`HandlerMethod`类型，用于反射调用你的 Controller 方法。
+
+​	
+
+### 3.4.2 拦截器链配置
+
+​	多个拦截器可以叫做拦截器链。配置拦截器链非常简单，首先你要创建多个拦截器（指实现HandlerInterceptor的类），然后再到支持类中添加拦截器
+
+```java
+public class SpringMvcSupport implements WebMvcConfigurer {
+    //拦截器
+    @Autowired
+    private ProjectInterceptor projectInterceptor;
+
+    @Autowired
+    private ProjectInterceptor2 projectInterceptor2;
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("/pages/**").addResourceLocations("/pages/");
+    }
+
+    //当前端请求books下的任意路径时，使用拦截器拦截
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(projectInterceptor).addPathPatterns("/books/**");
+        registry.addInterceptor(projectInterceptor2).addPathPatterns("/books/**");
+    }
+}
+```
+
+​	拦截器链的运行顺序参照拦截器添加顺序为准。
