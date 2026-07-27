@@ -473,7 +473,7 @@ public class MyException extends RuntimeException implements ExitCodeGenerator {
 
 ​	属性值可以通过使用`@Value`注解直接注入到你的Bean，也可以通过Spring的`Environment`访问，或者通过`@ConfigurationProperties`绑定到对象
 
-​	SpringBoot使用一个非常特别的`PropertySource`顺序，旨在允许合理地重写值。**后面的`property source`可以覆盖签名属性源中定义的值**，按以下顺序考虑
+​	SpringBoot使用一个非常特别的`PropertySource`顺序，旨在允许合理地重写值。**后面的`property source`可以覆盖前面属性源中定义的值**，按以下顺序考虑
 
 1. 默认属性（通过`SpringApplication.setDefaultProperties`方法指定），示例：
 
@@ -598,19 +598,281 @@ $ java -jar myapp.jar --spring.application.json='{"my":{"name":"test"}}'
 
 ## 6.2.5 使用YAML
 
-​	YAML是JSON的超集，因此是指定分层配置数据的方便格式。只要你的`classpath`上有`SnakeYAML`库。`SpringApplication`类就会自动支持YAML作为`properties`的替代品
+​	YAML是JSON的超集，因此是指定分层配置数据的方便格式。只要你的`classpath`上有`SnakeYAML`库。`SpringApplication`类就会自动支持YAML作为`properties`的替代品。
+
+​	`spring-boot-starter`会自动提供`YAML`库
+
+
+
+
+
+
+
+##### 1 将YAML映射到Properties
+
+​	考虑下面这个yaml文档
+
+```yaml
+environments:
+  dev:
+    url: "https://dev.example.com"
+    name: "Developer Setup"
+  prod:
+    url: "https://another.example.com"
+    name: "My Cool App"
+```
+
+​	YAML文档需要从分层格式转换为可与Sring `Environment`一起使用扁平结构：
+
+```yaml
+environments.dev.url=https://dev.example.com
+environments.dev.name=Developer Setup
+environments.prod.url=https://another.example.com
+environments.prod.name=My Cool App
+```
+
+​	下面是列表在yaml文档中的形式：
+
+```yaml
+my:
+ servers:
+ - "dev.example.com"
+ - "another.example.com"
+
+```
+
+​	对应`properties`格式
+
+```yaml
+my.servers[0]=dev.example.com
+my.servers[1]=another.example.com
+```
+
+​	YAML文件不能通过`@PropertySource`或`@TestPropertySource`注解来加载，如果你需要用注解加载值，请使用`properties`文件。
+
+​	那怎么加载YAML文件呢。Spring Framework提供了两个类：`YamlPropertiesFactoryBean`将YAML作为`Properties`加载，`YamlMapFactoryBean`将YAML作为Bean加载。
+
+```java
+    public static void main(String[] args) {
+        YamlPropertiesFactoryBean yam = new YamlPropertiesFactoryBean();
+        yam.setResources( new ClassPathResource("application.yaml")); // 设置yml位置
+
+        Properties properties = yam.getObject();
+
+        try{
+            System.out.println(properties.getProperty("server.port"));
+            System.out.println(properties.getProperty("spring.application.name"));
+        }catch(NullPointerException ne){
+            System.out.println("文件中没有这个参数");
+            ne.printStackTrace();
+        }
+    }
+
+
+// YamlMapFacotryBean
+
+   public static void main(String[] args) {
+        YamlMapFactoryBean factory = new YamlMapFactoryBean();
+        factory.setResources(new ClassPathResource("application.yaml"));
+
+        Map<String,Object> properties = factory.getObject();
+
+        Set<String> keys = properties.keySet();
+        for(String key:keys){
+            Object value = properties.get(key);
+            System.out.println(key+":"+value);
+        }
+    }
+```
+
+​	实际上，`SpringBoot`会自动扫描`application.yml`文件的内容加载到`Environment`。Spring内部使用`YamlPropertySourceLoader`将yaml格式扁平化加载到`environment`，所以只需要将配置写到`apllication.yml`即可
+
+
+
+##### 2 Bean使用yml属性的方法
+
+​	第一种：**使用`@Value("$属性名")`**例如，yml文件中定义了这么个属性
+
+```yaml
+scholl:贵阳人文科技学院
+```
+
+​	在bean中这样写，就能读取到这条属性
+
+```java
+    @Value("${school}")
+    private String school;
+```
+
+​	
+
+​	第二种：直接将`environment`环境的全部属性加载到类中
+
+```java
+    @Autowired
+    private Environment environment;
+
+@GetMapping
+public void getEnviromentValue(){
+    System.out.pirntln(environment.getProperty("属性名"));
+} 
+```
+
+
+
+​	第三种，也是最常用的一种。使用注解`@ConfigurationProperties()`。它的作用是：
+
+**将 `application.yml` 或 `application.properties` 中的一组配置，自动绑定到一个 Java Bean 对象中。**
+
+​	假设yaml中有这么一组属性：
+
+```yaml
+enterprise:
+  name: tww
+  age: 18
+  tel: 188888888
+  subject:
+    - Java
+    - SpringBoot
+    - Mybatis
+```
+
+​	`-`符号表示列表或数组的成员，也就是说，`Java、SpringBoot、Mybatis`是`subject`这个集合或数组的成员。
+
+​	而java中有这么一个对应的类：
+
+```java
+public class Enterprise
+{
+    String name;
+    int age;
+    String tel;
+    List<String> subject;
+    
+    
+    
+    @Override
+    public String toString() {
+        return super.toString();
+    }
+}
+```
+
+​	我们将，这个类使用`@Component`注册为普通bean，在使用`@ConfigurationProperty`将参数绑定到该对象中。
+
+如下：
+
+```java
+package com.tww.domain;
+
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+@Component
+@ConfigurationProperties(prefix = "enterprise")
+public class Enterprise
+{
+    String name;
+    int age;
+    String tel;
+    List<String> subject;
+
+    public Enterprise(){}
+
+    public Enterprise(String name, int age, String tel, List<String> subject) {
+        this.name = name;
+        this.age = age;
+        this.tel = tel;
+        this.subject = subject;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public String getTel() {
+        return tel;
+    }
+
+    public void setTel(String tel) {
+        this.tel = tel;
+    }
+
+    public List<String> getSubject() {
+        return subject;
+    }
+
+    public void setSubject(List<String> subject) {
+        this.subject = subject;
+    }
+
+    @Override
+    public String toString() {
+        return super.toString();
+    }
+}
+
+```
+
+​	注意要提供标准化`bean`方法。也就是get和set方法。会**读取配置文件中以 `enterprise` 为前缀的所有属性，并绑定到当前 Java Bean 的对应字段中**。支持内嵌对象的绑定。比如这里的集合`<List>`
 
 ​	
 
 
 
+##### 3 yml多属性配置（指定多环境）
 
+​	三个端横线`---`是YAML语法的文档分隔符，它允许在同一个文件中写多个独立的YAML文档
 
+```yaml
+spring:
+  application:
+    name: SpringBoot_quick_start
+  profiles:
+    active: test # 决定使用test环境
+# 默认环境（比如开发环境）
+server:
+  port: 8082
+---
+spring:
+  config:
+    activate:
+      on-profile: test  #给这个这个环境起名为test
+server:
+  port: 8080
+---
+spring:
+  config:
+    activate:
+      on-profile: prod #给这个环境起名为prod
+server:
+  port: 8081
 
+```
 
+​	如果SpringBoot启动时，没有激活任何`spring.profiles.active`环境配置，那么SpringBoot会按顺序从上到下合并这些文档。因为这三个文档里都配置了`server.port`，按照SpringBoot的加载规则，后面的值会覆盖前面的值。最终启动的端口是8081
 
+​	如果启动时指定`--spring.profiles.active=test`，Spring会仅加载第二块
 
+​	如果启动时指定`--spring.profiles.active=prod`，那么会加载第三块
 
+​	如果没有配置，只会加载第一块。也就是端口8082
+
+​	
 
 
 
