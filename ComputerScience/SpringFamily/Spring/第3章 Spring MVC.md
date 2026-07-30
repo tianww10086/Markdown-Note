@@ -1052,7 +1052,17 @@ public class SpringMvcConfig {
 
 ​	当拦截器有多个时， 只有全部preHandel方法都返回true，才会放行（表示当前拦截器同意请求继续执行）
 
-​	`handler`通常都是`HandlerMethod`类型，用于反射调用你的 Controller 方法。
+​	`handler`通常都是`HandlerMethod`类型，用于反射调用你的 Controller 方法。可以想下面一样处理`handler`
+
+```java
+        //判断当前拦截到的是Controller的方法还是其他资源
+        if (!(handler instanceof HandlerMethod)) {
+            //当前拦截到的不是动态方法，直接放行
+            return true;
+        }
+```
+
+​	`HandlerMethod`中存放着`Controller`类和`Controller`的方法，如果请求的是`Controller`的方法，就拦截进行处理
 
 ​	
 

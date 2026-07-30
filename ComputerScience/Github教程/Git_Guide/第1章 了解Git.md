@@ -1,4 +1,4 @@
-## 1 Git连接Github
+# 1 Git连接Github
 
 ls/ll	查看当前目录
 
@@ -12,7 +12,7 @@ vi            vi编辑器
 
 
 
-#### 1.1 Git环境配置
+## 1.1 Git环境配置
 
 下载网址：[Git - Downloading Package](https://git-scm.com/downloads/win)
 
@@ -20,7 +20,7 @@ vi            vi编辑器
 
 
 
-#### 1.1.2 ssh密钥
+## 1.1.2 ssh密钥
 
 ​	首先设置本地Git的名字和邮箱（与欲连接的账户一致）
 
@@ -56,11 +56,13 @@ $ssh -T git@github.com
 
 
 
-#### 1.1.3 初次使用Git
+## 1.1.3 初次使用Git
 
-​	**1. clone**
+#### 	**1. clone**
 
-​	大多数远程仓库，都可以使用`ssh`地址进行clone，格式如下：
+​	
+
+​	该命令可以将远程仓库的内容下载到本地文件夹中，大多数远程仓库，都可以使用`ssh`地址进行clone，格式如下：
 
 ```bash
 $git clone ssh地址
@@ -122,7 +124,7 @@ hello.c
 
 
 
-**2. 提交**
+#### **2. commit**
 
 ​	将该文件提交至仓库，此后该文件就进入了Git的管理下。
 
@@ -132,7 +134,7 @@ warning: in the working copy of 'hello.c', LF will be replaced by CRLF the next 
 //警告：在“hello.c”的工作副本中，下次 Git 操作时，换行符（LF）将被转换为回车换行符（CRLF）。
 ```
 
- 	通过`git add`命令将文件加入暂存区。再通过`git commit`命令提交至仓库。
+​	通过`git add`命令将文件加入暂存区。再通过`git commit`命令提交至仓库。
 
 ```bash
 $ git commit -m "Add hello by C"
@@ -164,5 +166,5 @@ Date:   Wed Jan 28 16:14:19 2026 +0800
 git push
 ```
 
-
+​	
 
