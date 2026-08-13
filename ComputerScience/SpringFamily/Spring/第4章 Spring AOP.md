@@ -359,7 +359,7 @@ excution(* *..*Service+.*(..))
 ```java
     @Before("pt()")
     public void before(JoinPoint jp){
-        Object []arr =  jp.getArgs();
+        Object []arr =  jp.getArgs();  
         System.out.println(Arrays.toString(arr));
         System.out.println("before advice ....");
     }
@@ -459,4 +459,10 @@ public Object around(ProceedingJoinPoint pjp){
 ```
 
 
+
+
+
+
+
+​		
 

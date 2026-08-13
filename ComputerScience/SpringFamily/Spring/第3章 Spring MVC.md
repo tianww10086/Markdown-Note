@@ -1093,3 +1093,13 @@ public class SpringMvcSupport implements WebMvcConfigurer {
 ```
 
 ​	拦截器链的运行顺序参照拦截器添加顺序为准。
+
+
+
+
+
+## 3.5 HTTP消息转换器（`HttpMessageConverter`)
+
+​	`Spring MVC`使用`HttpMessageConverter`接口来转换HTTP请求和响应。合理的默认值是开箱即有的，例如，对象可以自动转换为json（通过使用`Jackson`库）。字符串是以`UTF-8`编码
+
+​	如果需要添加或定制转换器，可以使用`SpringBoot`的`HttpMessageConverters`类。

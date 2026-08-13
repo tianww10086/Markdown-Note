@@ -876,3 +876,139 @@ server:
 
 
 
+
+
+
+
+# 6.3 Spring Cache
+
+​		Spring Cache是一个框架，实现了基于注解的缓存功能，只需要简单地加一个注解，就能实现缓存功能。Spring Cache提供了一层抽象，底层可以切换不同的缓存实现。例如：
+
+- `EHCache`
+- `Caffeine`
+- `Redis`
+
+​	下面是该框架的Maven坐标
+
+```xml
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
+```
+
+​	下面是常用注解：
+
+![image-20260807211424929](../IMG/image-20260807211424929.png)
+
+​	
+
+
+
+###  6.3.1`@Cacheable`
+
+​	`@Cacheable`特别适合查询的场景，如果缓存中已经有该数据，那么直接返回，如果没有数据，就将方法的返回值放入到缓存中。例如，我们通过id查询User
+
+```java
+@Cacheable(cacheNames="UserCache" key = #id)
+public User getById(Integer id){
+    return userMapper.getById(id);
+}
+```
+
+​	当缓存中有数据，这个getById方法都不会调用。直接从缓存中拿到User数据返回。没有数据，才会进行数据库查询，返回后把该数据缓存
+
+
+
+
+
+
+
+### 6.3.2 `@Cacheput`
+
+​	`@CachePut`可以将方法的返回值放到缓存中，适用于数据有新增和修改的情况，插入数据库的同时也将数据保存到缓存中，下次请求就直接从缓存中拿取数据。例如：
+
+```java
+@CachePut(cacheNames="UserCache" key = #user.id) // key生成为：UserCache::user.id
+public User save(@RequestBody User user){
+    userMapper.insert(user);
+    return user;
+}
+```
+
+​	`CachePut`不会检查缓存中是否有该数据，直接将返回值写进缓存。缓存中存储的数据的结构为 ：`UserCache::[Empty]::UserCache::{id}`
+
+​	
+
+### 6.3.3 `@CacheEvict`
+
+​	`@CacheEvict`用来清理缓存，通过`cacheNames`来指定要清理的缓存，key指定该缓存区域内的键
+
+```java
+@DeleteMapping
+@CacheEvict(cacheNames = "userCache",key = #id)
+public void deleteById(Long id){
+    userMapper.deleteById(id);
+}
+```
+
+​	`@CacheEvict`会等待方法执行完毕后才会清理缓存。如果想清理全部的缓存，可以像下面这样
+
+```java
+@CacheEvict(cacheNames = "userCache"， allEntries = true)
+public void deleteAll(){
+    ....
+}
+```
+
+
+
+​	
+
+
+
+## 6.4 Spring Task
+
+​	`Spring Task`是Spring框架提供的任务调度工具，可以按照约定的时间自动执行某个代码逻辑。下面是一个定时任务的示例 ：
+
+```java
+  /**
+     * 定时任务，每个五秒触发异常
+     */
+    @Scheduled(cron="0/5 * * * * ?")
+    public void executeTask(){
+        log.info("定时任务开始执行:{}",new Date());
+    }
+```
+
+​	记得在配置类加上`@@EnableScheduling`
+
+​	定时规则通过`corn`表达式指定
+
+
+
+### 6.4.1 `corn`表达式
+
+​	`corn`表达式是一个字符串，通过`corn`表达式可以**定义任务触发时间**。
+
+​	构成规则：分为6或7个域，由空格分开，每个域代表一个含义，分别为：
+
+- 秒、分钟、小时、日、月、周、年（可选）
+
+  每个字段都有自己的有效值范围：
+
+```tex
+ ┌───────────── second (0-59)
+ │ ┌───────────── minute (0 - 59)
+ │ │ ┌───────────── hour (0 - 23)
+ │ │ │ ┌───────────── day of the month (1 - 31)
+ │ │ │ │ ┌───────────── month (1 - 12) (or JAN-DEC)
+ │ │ │ │ │ ┌───────────── day of the week (0 - 7)
+ │ │ │ │ │ │          (0 or 7 is Sunday, or MON-SUN)
+ │ │ │ │ │ │
+ * * * * * *
+```
+
+​	2022年10月12日上午9点整对应的`cron`表达式为：`corn="0 0 9 12 10 ? 2022 "`
+
+​	

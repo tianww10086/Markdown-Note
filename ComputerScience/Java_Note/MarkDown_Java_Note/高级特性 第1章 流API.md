@@ -113,7 +113,7 @@ default String<E> paralleStream();
 
 ## 1.2 流的创建
 
-​	==**`Collection`接口的stream方法可以将任何集合转换为一个流**==。如果你有一个数组，那么可以转而使用静态的Stream.of方法
+​	==**`Collection`接口的stream方法可以将任何集合转换为一个流**==。如果你有一个数组，那么可以转而使用静态的**Stream.of**方法
 
 ```java
 Stream<String> words = Stream.of(contents.split("\\PL+"));//contents是一个字符串
@@ -1389,7 +1389,7 @@ public class OptionalTest {
 
 
 
-## 1.8 收集结果
+## 1.8 收集结果(collect(Collectors))
 
 ​	处理完流之后，可以调用`iterator`方法查看结果，会它产生用来访问元素的旧式风格的迭代器。
 
@@ -1439,7 +1439,7 @@ AGE
 
 ​	
 
-​	`collect`方法可以将流中的元素收集到另一个目标的需求。它会接受一个`Collector`接口的实例，==而`Collectors`提供了大量用于生成常见收集器的工厂方法==。
+​	**`collect`方法**可以将流中的元素收集到另一个目标的需求。它会接受一个`Collector`接口的实例，==而`Collectors`提供了大量用于生成常见收集器的工厂方法==。
 
 ```java
 List<String> result = stream.collect(Collectors.toList()); //将流中的元素收集到List表中
@@ -1684,7 +1684,7 @@ double getAverage()
 
 
 
-## 1.9 收集到映射表中
+## 1.9 收集到映射表中(toMap)
 
 ​	假设我们有一个`Stream<Person>`，并且想要将其元素收集到一个映射表中，这样后续就可以通过它们的ID来查找人员。==`Collectors.toMap`方法有两个函数参数，它们用来产生映射表的键和值==
 
@@ -1844,13 +1844,104 @@ static <T,K,U> Collector<T,?,Map<K,U>> toMap(Function<? super T,? extends k> key
 
 
 
-## 1.10 群组与分区
+## 1.10 群组与分区（groupingBy）
+
+​	`Collectors.groupingBy()`用于实现类似SQL中的`GROUP BY`的分组功能，它能够根据指定属性将流中的元素分类，并将结果收集到一个`Map`中。他有三个版本。
+
+​	先来介绍第一个版本，只需要传入分类函数。
+
+```java
+    public static <T, K> Collector<T, ?, Map<K, List<T>>>
+    groupingBy(Function<? super T, ? extends K> classifier) {
+        return groupingBy(classifier, toList());
+    }
+```
+
+​	`classifier`要求传入一个分类函数，来决定分组依据。例如
+
+```java
+// 假设有一个 Employee 类，包含 name 和 age 属性
+List<Employee> employees = Arrays.asList(
+    new Employee("John", 38),
+    new Employee("Tim", 33),
+    new Employee("Andrew", 33)
+);
+
+// 按年龄分组，相同年龄的员工放在一个 List 中
+Map<Integer, List<Employee>> employeesByAge = employees.stream()
+        .collect(Collectors.groupingBy(Employee::getAge));
+
+System.out.println(employeesByAge);
+// 输出: {33=[Employee{name='Tim', age=33}, Employee{name='Andrew', age=33}], 38=[Employee{name='John', age=38}]}
+```
+
+​	在这个例子中，`Employee:getAge`就是分类函数，返回值`Integer`作为Map的键，`value`则对应返回了该值的对象集合，例如这里，返回
+
+年龄的对象有Tim和Adrew，那么他们就在一个集合里作为33key的value。这就是分组功能
+
+
+
+​	**第二个版本允许你对分组或的每组的值进行进一步处理，例如求和、计数、求平均值等**
+
+```java
+    public static <T, K, A, D>
+    Collector<T, ?, Map<K, D>> groupingBy(Function<? super T, ? extends K> classifier,
+                                          Collector<? super T, A, D> downstream) {
+        return groupingBy(classifier, HashMap::new, downstream);
+    }
+```
+
+​	通过第二个参数传入下游收集器。该版本默认使用HashMap，下面是使用场景
+
+```java
+// 按部门分组，并计算每个部门员工的总工资
+Map<Department, Integer> totalSalaryByDept = employees.stream()
+        .collect(Collectors.groupingBy(Employee::getDepartment, 
+                 Collectors.summingInt(Employee::getSalary)));
+```
+
+​	
+
+​	第三个版本则允许你指定其他map类型
+
+```java
+    public static <T, K, D, A, M extends Map<K, D>>
+    Collector<T, ?, M> groupingBy(Function<? super T, ? extends K> classifier,
+                                  Supplier<M> mapFactory,
+                                  Collector<? super T, A, D> downstream) 
+```
+
+​	这个版本由第二个参数`mapFactory`指定map类型，例如，想让分组后的结果自动排序，那么可以使用`TreeMap`
+
+```java
+// 按年龄分组，并将结果放入一个 TreeMap 中（键自动排序）
+Map<Integer, List<Employee>> sortedMap = employees.stream()
+        .collect(Collectors.groupingBy(Employee::getAge, 
+                 TreeMap::new, 
+                 Collectors.toList()));
+```
+
+
 
 
 
 
 
 ## 1.11 下游收集器
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
